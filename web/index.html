@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dengue Lambayeque — Panel para autoridades</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    :root {
+      --bg: #e7f2f4;
+      --bg-2: #f7ebe4;
+      --ink: #18323a;
+      --muted: #5a747c;
+      --panel: rgba(255, 255, 255, 0.82);
+      --panel-solid: #ffffff;
+      --line: #c9dde2;
+      --accent: #3aa8a0;
+      --accent-deep: #1f7a74;
+      --accent-soft: #d4f1ee;
+      --peach: #f3c4b0;
+      --peach-soft: #fbebe4;
+      --sky: #b9d8f0;
+      --alto: #e11d48;
+      --medio: #ea8c5d;
+      --bajo: #6fb8a8;
+      --shadow: 0 12px 32px rgba(24, 50, 58, 0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Manrope", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(900px 480px at 8% -8%, #c8ebe6 0%, transparent 58%),
+        radial-gradient(800px 420px at 92% 0%, #f7d5c8 0%, transparent 52%),
+        radial-gradient(700px 380px at 70% 100%, #c5daf0 0%, transparent 45%),
+        linear-gradient(165deg, var(--bg) 0%, #eef6f7 45%, var(--bg-2) 100%);
+      min-height: 100vh;
+    }
+    header {
+      padding: 2.4rem 1.5rem 1.4rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .brand {
+      font-family: "Syne", sans-serif;
+      font-weight: 800;
+      font-size: clamp(2rem, 4.5vw, 3rem);
+      line-height: 1.05;
+      margin: 0 0 0.55rem;
+      letter-spacing: -0.03em;
+      background: linear-gradient(105deg, #18323a 20%, #1f7a74 55%, #e07a5f 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .lead {
+      margin: 0;
+      max-width: 40rem;
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.45;
+    }
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+      margin-top: 1.15rem;
+    }
+    .chip {
+      border: 1px solid transparent;
+      background: linear-gradient(var(--panel-solid), var(--panel-solid)) padding-box,
+                  linear-gradient(120deg, #9fd9d2, #f3c4b0, #b9d8f0) border-box;
+      border-radius: 12px;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: var(--ink);
+      box-shadow: 0 4px 14px rgba(24, 50, 58, 0.05);
+    }
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1.5rem 3rem;
+      display: grid;
+      gap: 1.2rem;
+    }
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.9rem;
+    }
+    .kpi {
+      position: relative;
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      border-radius: 18px;
+      padding: 1.05rem 1.15rem 1.1rem;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .kpi::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 5px;
+      background: linear-gradient(180deg, var(--accent), var(--peach));
+    }
+    .kpi:nth-child(2)::before { background: linear-gradient(180deg, #7eb8de, #b9d8f0); }
+    .kpi:nth-child(3)::before { background: linear-gradient(180deg, #ea8c5d, #f3c4b0); }
+    .kpi:nth-child(4)::before { background: linear-gradient(180deg, #3aa8a0, #9fd9d2); }
+    .kpi b {
+      display: block;
+      font-family: "Syne", sans-serif;
+      font-weight: 700;
+      font-size: 1.7rem;
+      margin-top: 0.3rem;
+      color: var(--ink);
+    }
+    .kpi span { color: var(--muted); font-size: 0.84rem; font-weight: 500; }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 1.2rem;
+    }
+    section.card {
+      background: var(--panel);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.75);
+      border-radius: 20px;
+      padding: 1.15rem 1.25rem 1.3rem;
+      box-shadow: var(--shadow);
+    }
+    section.card h2 {
+      font-family: "Syne", sans-serif;
+      font-weight: 700;
+      font-size: 1.28rem;
+      margin: 0 0 0.35rem;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+    }
+    section.card p.help {
+      margin: 0 0 0.95rem;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.4;
+    }
+    #map {
+      height: 420px;
+      border-radius: 16px;
+      border: 2px solid var(--accent-soft);
+      overflow: hidden;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.5);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 0.6rem 0.45rem;
+      border-bottom: 1px solid #e2eef1;
+    }
+    th {
+      color: var(--accent-deep);
+      font-weight: 700;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.22rem 0.6rem;
+      border-radius: 8px;
+      font-size: 0.76rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .badge.alto {
+      background: var(--alto);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(225, 29, 72, 0.35);
+    }
+    .badge.medio {
+      background: #ffe0cc;
+      color: #9a4a22;
+      border: 1px solid #f3c4b0;
+    }
+    .badge.bajo {
+      background: var(--accent-soft);
+      color: var(--accent-deep);
+      border: 1px solid #9fd9d2;
+    }
+    .chart-wrap {
+      position: relative;
+      height: 280px;
+      background: linear-gradient(180deg, #f7fcfb 0%, #ffffff 100%);
+      border-radius: 14px;
+      padding: 0.4rem;
+      border: 1px solid #e5f2f0;
+    }
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2rem;
+    }
+    .district-chart-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+    .district-chart-head .help { margin: 0; }
+    .filters {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.8rem;
+      align-items: center;
+    }
+    tr.clickable { cursor: pointer; transition: background 0.15s ease; }
+    tr.clickable:hover td { background: var(--peach-soft); }
+    tr.selected td { background: var(--accent-soft); }
+    select, input[type="search"] {
+      border: 1.5px solid var(--line);
+      background: #fff;
+      border-radius: 12px;
+      padding: 0.5rem 0.8rem;
+      font: inherit;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    select:focus, input[type="search"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(58, 168, 160, 0.2);
+    }
+    footer {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1.5rem 2.5rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+      line-height: 1.45;
+    }
+    .error {
+      background: #fff1f2;
+      border: 1px solid #fecdd3;
+      color: #9f1239;
+      padding: 1rem;
+      border-radius: 14px;
+    }
+    @media (max-width: 900px) {
+      .kpis, .grid-2, .chart-grid { grid-template-columns: 1fr; }
+      #map { height: 340px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 class="brand">Dengue Lambayeque</h1>
+    <p class="lead">
+      Panel de predicción por distrito para priorizar acciones de vigilancia y control.
+      Combina casos CDC con clima Open-Meteo e índice ICEN.
+    </p>
+    <div class="meta-row" id="meta-chips"></div>
+  </header>
+
+  <main>
+    <div class="kpis" id="kpis"></div>
+
+    <div class="grid-2">
+      <section class="card">
+        <h2>Mapa de riesgo (próximo mes)</h2>
+        <p class="help">Color según percentil histórico de cada distrito. Clic en un punto para detalle.</p>
+        <div id="map"></div>
+      </section>
+      <section class="card">
+        <h2>Prioridad de acción</h2>
+        <p class="help">Distritos con mayor predicción promedio en el horizonte de 3 meses.</p>
+        <div style="max-height: 420px; overflow: auto;">
+          <table>
+            <thead>
+              <tr><th>#</th><th>Distrito</th><th>Pred.</th><th>Riesgo</th></tr>
+            </thead>
+            <tbody id="ranking-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <div class="chart-grid">
+      <section class="card">
+        <h2>Departamento 2024</h2>
+        <p class="help">Suma de predicciones distritales frente a casos observados.</p>
+        <div class="chart-wrap"><canvas id="depChart"></canvas></div>
+      </section>
+      <section class="card">
+        <div class="district-chart-head">
+          <div>
+            <h2 style="margin:0 0 0.35rem">Por distrito</h2>
+            <p class="help">Backtest 2024 y pronóstico operativo (h+1…h+3).</p>
+          </div>
+          <select id="districtSelect" aria-label="Elegir distrito"></select>
+        </div>
+        <div class="chart-wrap"><canvas id="districtChart"></canvas></div>
+      </section>
+    </div>
+
+    <section class="card">
+      <h2>Detalle por distrito</h2>
+      <p class="help">Clic en una fila para ver su gráfico. Filtra por provincia o busca por nombre.</p>
+      <div class="filters">
+        <select id="provFilter"><option value="">Todas las provincias</option></select>
+        <input type="search" id="search" placeholder="Buscar distrito..." />
+      </div>
+      <div style="overflow:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Distrito</th>
+              <th>Provincia</th>
+              <th>Casos 2024</th>
+              <th>Pred 2024</th>
+              <th>MAE</th>
+              <th>Pronóstico h+1</th>
+              <th>Riesgo</th>
+            </tr>
+          </thead>
+          <tbody id="detail-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer id="footer-note"></footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script>
+    const RISK_COLOR = { alto: "#e11d48", medio: "#ea8c5d", bajo: "#6fb8a8" };
+    const CHART_REAL = "#18323a";
+    const CHART_PRED = "#3aa8a0";
+    let districtChart = null;
+    let selectedUbigeo = null;
+
+    async function load() {
+      try {
+        const res = await fetch("./data/dashboard.json", { cache: "no-store" });
+        if (!res.ok) throw new Error("No se pudo cargar data/dashboard.json. Ejecuta primero el pipeline.");
+        const data = await res.json();
+        render(data);
+      } catch (err) {
+        document.querySelector("main").innerHTML = `<div class="error">${err.message}</div>`;
+      }
+    }
+
+    function render(data) {
+      const m = data.meta;
+      document.getElementById("meta-chips").innerHTML = [
+        `Último dato: ${m.ultimo_dato}`,
+        `Horizonte: ${m.horizonte_meses} meses`,
+        `${m.n_distritos} distritos`,
+        `MAE dep. 2024: ${m.mae_departamento}`,
+        `Clima: Open-Meteo + ICEN`,
+      ].map(t => `<span class="chip">${t}</span>`).join("");
+
+      document.getElementById("kpis").innerHTML = [
+        ["MAE departamento", m.mae_departamento, "casos/mes (suma distritos)"],
+        ["RMSE departamento", m.rmse_departamento, "validación 2024"],
+        ["MAE por distrito", m.mae_distrito, "promedio mensual"],
+        ["Modelo", "HGB", "log1p(casos) + clima"],
+      ].map(([k,v,s]) => `<div class="kpi"><span>${k}</span><b>${v}</b><span>${s}</span></div>`).join("");
+
+      const h1 = Object.fromEntries(data.mapa_pronostico_h1.map(r => [r.ubigeo, r]));
+      const rows = data.resumen_distritos_2024.map(r => ({
+        ...r,
+        h1: h1[r.ubigeo]?.predicho ?? "—",
+        riesgo: h1[r.ubigeo]?.riesgo ?? "bajo",
+      }));
+
+      // Ranking → opens district chart
+      const ranking = data.ranking_accion.slice(0, 15);
+      document.getElementById("ranking-body").innerHTML = ranking.map((r, i) => `
+        <tr class="clickable" data-ubigeo="${r.ubigeo}">
+          <td>${i + 1}</td>
+          <td>${title(r.distrito)}<div style="color:var(--muted);font-size:0.8rem">${title(r.provincia)}</div></td>
+          <td>${r.pred_promedio}</td>
+          <td><span class="badge ${r.riesgo}">${r.riesgo}</span></td>
+        </tr>
+      `).join("");
+      document.getElementById("ranking-body").addEventListener("click", (e) => {
+        const tr = e.target.closest("tr[data-ubigeo]");
+        if (tr) selectDistrict(tr.dataset.ubigeo, data, rows);
+      });
+
+      // Map
+      const map = L.map("map").setView([-6.55, -79.75], 9);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; OpenStreetMap",
+        maxZoom: 14,
+      }).addTo(map);
+      data.mapa_pronostico_h1.forEach(p => {
+        const color = RISK_COLOR[p.riesgo] || "#666";
+        const radius = Math.max(7, Math.min(22, 6 + Math.sqrt(p.predicho) * 1.8));
+        L.circleMarker([p.lat, p.lon], {
+          radius,
+          color: "#fff",
+          weight: 1.5,
+          fillColor: color,
+          fillOpacity: 0.85,
+        }).addTo(map).bindPopup(
+          `<strong>${title(p.distrito)}</strong><br/>Provincia: ${title(p.provincia)}<br/>` +
+          `Predicción ${p.anio}-${String(p.mes).padStart(2,"0")}: <b>${p.predicho}</b> casos<br/>` +
+          `Riesgo: <b>${p.riesgo}</b>`
+        ).on("click", () => selectDistrict(p.ubigeo, data, rows));
+      });
+
+      // Department chart
+      const dep = data.departamento_2024;
+      new Chart(document.getElementById("depChart"), {
+        type: "line",
+        data: {
+          labels: dep.map(d => d.mes),
+          datasets: [
+            { label: "Real 2024", data: dep.map(d => d.real), borderColor: CHART_REAL, backgroundColor: "rgba(24,50,58,0.08)", tension: 0.25, pointRadius: 4, pointBackgroundColor: CHART_REAL },
+            { label: "Predicho", data: dep.map(d => d.predicho), borderColor: CHART_PRED, backgroundColor: "rgba(58,168,160,0.12)", tension: 0.25, pointRadius: 4, pointBackgroundColor: CHART_PRED },
+          ],
+        },
+        options: chartOptions("Mes"),
+      });
+
+      // District selector + chart
+      const distSel = document.getElementById("districtSelect");
+      rows.forEach(r => {
+        const opt = document.createElement("option");
+        opt.value = r.ubigeo;
+        opt.textContent = `${title(r.distrito)} (${title(r.provincia)})`;
+        distSel.appendChild(opt);
+      });
+      distSel.addEventListener("change", () => selectDistrict(distSel.value, data, rows));
+      selectDistrict(rows[0]?.ubigeo, data, rows);
+
+      // Detail table
+      const provSel = document.getElementById("provFilter");
+      [...new Set(rows.map(r => r.provincia))].sort().forEach(p => {
+        const opt = document.createElement("option");
+        opt.value = p; opt.textContent = title(p);
+        provSel.appendChild(opt);
+      });
+
+      const tbody = document.getElementById("detail-body");
+      function paint() {
+        const q = document.getElementById("search").value.trim().toLowerCase();
+        const prov = provSel.value;
+        const filtered = rows.filter(r =>
+          (!prov || r.provincia === prov) &&
+          (!q || r.distrito.toLowerCase().includes(q))
+        );
+        tbody.innerHTML = filtered.map(r => `
+          <tr class="clickable ${r.ubigeo === selectedUbigeo ? "selected" : ""}" data-ubigeo="${r.ubigeo}">
+            <td>${title(r.distrito)}</td>
+            <td>${title(r.provincia)}</td>
+            <td>${r.casos_real}</td>
+            <td>${r.casos_pred}</td>
+            <td>${r.mae}</td>
+            <td>${r.h1}</td>
+            <td><span class="badge ${r.riesgo}">${r.riesgo}</span></td>
+          </tr>
+        `).join("");
+      }
+      tbody.addEventListener("click", (e) => {
+        const tr = e.target.closest("tr[data-ubigeo]");
+        if (tr) {
+          selectDistrict(tr.dataset.ubigeo, data, rows);
+          paint();
+        }
+      });
+      provSel.addEventListener("change", paint);
+      document.getElementById("search").addEventListener("input", paint);
+      paint();
+
+      document.getElementById("footer-note").textContent =
+        `${m.nota} Fuentes: ${m.fuente_casos}; ${m.fuente_clima}. Modelo: ${m.modelo}.`;
+    }
+
+    function selectDistrict(ubigeo, data, rows) {
+      if (!ubigeo) return;
+      selectedUbigeo = ubigeo;
+      const distSel = document.getElementById("districtSelect");
+      if (distSel.value !== ubigeo) distSel.value = ubigeo;
+
+      const backtest = data.backtest_distritos
+        .filter(r => r.ubigeo === ubigeo)
+        .sort((a, b) => a.mes - b.mes);
+      const forecast = (data.pronostico || [])
+        .filter(r => r.ubigeo === ubigeo)
+        .sort((a, b) => a.horizonte - b.horizonte);
+
+      const labels = [
+        ...backtest.map(r => `${r.mes}`),
+        ...forecast.map(r => `${r.mes} (h+${r.horizonte})`),
+      ];
+      const observed = [
+        ...backtest.map(r => r.casos),
+        ...forecast.map(() => null),
+      ];
+      const predicted = [
+        ...backtest.map(r => r.predicho),
+        ...forecast.map(r => r.predicho),
+      ];
+
+      const meta = rows.find(r => r.ubigeo === ubigeo);
+      if (districtChart) districtChart.destroy();
+      districtChart = new Chart(document.getElementById("districtChart"), {
+        type: "line",
+        data: {
+          labels,
+          datasets: [
+            {
+              label: "Real",
+              data: observed,
+              borderColor: CHART_REAL,
+              backgroundColor: "rgba(24,50,58,0.08)",
+              tension: 0.25,
+              pointRadius: 3,
+              pointBackgroundColor: CHART_REAL,
+              spanGaps: false,
+            },
+            {
+              label: "Predicho + pronóstico",
+              data: predicted,
+              borderColor: CHART_PRED,
+              backgroundColor: "rgba(58,168,160,0.12)",
+              tension: 0.25,
+              pointRadius: 3,
+              pointBackgroundColor: CHART_PRED,
+              segment: {
+                borderDash: (ctx) =>
+                  ctx.p0DataIndex >= backtest.length - 1 ? [6, 4] : undefined,
+              },
+            },
+          ],
+        },
+        options: {
+          ...chartOptions("Mes"),
+          plugins: {
+            legend: { position: "bottom" },
+            title: {
+              display: !!meta,
+              text: meta
+                ? `${title(meta.distrito)} · MAE ${meta.mae} · riesgo ${meta.riesgo}`
+                : "",
+              color: "#5a6760",
+              font: { size: 12, weight: "500" },
+            },
+          },
+        },
+      });
+
+      document.querySelectorAll("#detail-body tr").forEach(tr => {
+        tr.classList.toggle("selected", tr.dataset.ubigeo === ubigeo);
+      });
+    }
+
+    function chartOptions(xTitle) {
+      return {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: "bottom" } },
+        scales: {
+          x: { title: { display: true, text: xTitle } },
+          y: { title: { display: true, text: "Casos" }, beginAtZero: true },
+        },
+      };
+    }
+
+    function title(s) {
+      // Avoid /\b\w/: in JS, ñ/á are not word chars, so "Ferreñafe" became "FerreñAfe".
+      return String(s || "")
+        .toLocaleLowerCase("es-PE")
+        .replace(/(^|[\s\-'])(\S)/g, (_, sep, ch) => sep + ch.toLocaleUpperCase("es-PE"));
+    }
+
+    load();
+  </script>
+</body>
+</html>

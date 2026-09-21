@@ -6,7 +6,11 @@ venv/
 .DS_Store
 Thumbs.db
 outputs/*.png
+outputs/*.csv
 models/*.pkl
+models/*.json
 data/*.csv
 data/*.txt
+data/_distritos_tmp.txt
 !data/.gitkeep
+!web/data/dashboard.json
