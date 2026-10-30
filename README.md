@@ -7,7 +7,7 @@ Research pipeline to estimate **monthly dengue cases by district** in Lambayeque
 - Python 3.10+ (3.12 recommended)
 - Internet access for Open-Meteo climate download (step 2)
 - Input files under `data/`:
-  - `cdc_dengue_surveillance_2000_2024.csv` — CDC/MINSA open dengue surveillance
+  - `cdc_dengue_surveillance_2000_2025.csv` — CDC/MINSA open dengue surveillance
   - `icen_coastal_el_nino.txt` — coastal El Niño index / ICEN (ENFEN)
   - Optional SENAMHI station series (for experiments only):
     - `senamhi_lambayeque_daily.txt` (ex-code qc00000301)
@@ -32,7 +32,7 @@ py -3.12 01_prepare_data.py
 # 2) Download Open-Meteo climate by node and merge with ICEN
 py -3.12 02_fetch_climate.py
 
-# 3) Train district model, evaluate 2024, export dashboard JSON + plots
+# 3) Train (2015–2024), backtest 2025, forecast 2026–2027
 py -3.12 03_train_district_model.py
 
 # 4) Open the local dashboard
@@ -41,13 +41,15 @@ py -3.12 04_serve_dashboard.py
 
 Dashboard URL: [http://127.0.0.1:8080](http://127.0.0.1:8080)
 
+Forecast CSVs: `outputs/forecasts/` (`backtest_*_2025.csv`, `forecast_*_2026_2027.csv`).
+
 ## Pipeline overview
 
 | Step | Script | Output |
 |------|--------|--------|
 | 1 | `01_prepare_data.py` | `data/lambayeque_districts_monthly.csv` |
 | 2 | `02_fetch_climate.py` | `data/lambayeque_districts_climate.csv` |
-| 3 | `03_train_district_model.py` | `models/`, `web/data/dashboard.json` |
+| 3 | `03_train_district_model.py` | `models/`, `web/data/dashboard.json`, `outputs/forecasts/` |
 | 4 | `04_serve_dashboard.py` | Local web server |
 
 Supporting module: `district_coords.py` (district centroids and climate-node mapping).

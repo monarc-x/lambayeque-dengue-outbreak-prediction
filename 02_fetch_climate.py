@@ -21,7 +21,7 @@ ICEN = BASE / "data" / "icen_coastal_el_nino.txt"
 OUT = BASE / "data" / "lambayeque_districts_climate.csv"
 OUT_NODES = BASE / "data" / "climate_nodes_monthly.csv"
 
-START, END = "2015-01-01", "2024-12-31"
+START, END = "2015-01-01", "2025-12-31"
 
 
 def log(message: str) -> None:

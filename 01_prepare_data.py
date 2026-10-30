@@ -14,19 +14,21 @@ import pandas as pd
 from district_coords import DISTRICTS
 
 BASE = Path(__file__).resolve().parent
-CDC_CSV = BASE / "data" / "cdc_dengue_surveillance_2000_2024.csv"
+CDC_CSV = BASE / "data" / "cdc_dengue_surveillance_2000_2025.csv"
 OUT_DISTRICTS = BASE / "data" / "lambayeque_districts_monthly.csv"
 OUT_DEPARTMENT = BASE / "data" / "lambayeque_department_monthly.csv"
 
-YEAR_START, YEAR_END = 2015, 2024
+YEAR_START, YEAR_END = 2015, 2025
 
 
 def load_cdc_cases(path: Path) -> pd.DataFrame:
     """Load and filter CDC dengue surveillance rows for Lambayeque."""
     print("Reading CDC surveillance CSV...")
+    sample = path.read_text(encoding="utf-8", errors="ignore")[:2048]
+    sep = ";" if sample.count(";") > sample.count(",") else ","
     df = pd.read_csv(
         path,
-        sep=";",
+        sep=sep,
         dtype={"ubigeo": str, "ano": str, "semana": str},
         low_memory=False,
         encoding="utf-8",

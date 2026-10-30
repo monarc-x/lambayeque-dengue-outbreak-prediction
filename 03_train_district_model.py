@@ -1,4 +1,4 @@
-"""Train a district-level dengue model, evaluate on 2024, and export dashboard JSON.
+"""Train a district-level dengue model, evaluate on 2025, and forecast 2026–2027.
 
 Model: HistGradientBoostingRegressor on log1p(cases), district panel.
 Climate: Open-Meteo nodes + coastal El Niño index (ICEN / ENFEN).
@@ -20,9 +20,14 @@ DATA = BASE / "data" / "lambayeque_districts_climate.csv"
 MODEL = BASE / "models" / "modelo_dengue_distritos.pkl"
 META = BASE / "models" / "modelo_meta.json"
 OUT_JSON = BASE / "web" / "data" / "dashboard.json"
+OUT_DIR = BASE / "outputs" / "forecasts"
+OUT_BACKTEST = OUT_DIR / "backtest_distritos_2025.csv"
+OUT_FORECAST = OUT_DIR / "forecast_distritos_2026_2027.csv"
+OUT_DEP = OUT_DIR / "backtest_departamento_2025.csv"
+OUT_FORECAST_DEP = OUT_DIR / "forecast_departamento_2026_2027.csv"
 
-TEST_YEAR = 2024
-HORIZON = 3  # operational months ahead
+TEST_YEAR = 2025
+HORIZON = 24
 
 FEATURE_COLS = [
     "mes", "mes_sin", "mes_cos",
@@ -183,15 +188,20 @@ def recursive_forecast(
     return pd.concat(forecast_rows, ignore_index=True)
 
 
-def build_dashboard_payload(
-    comparison: pd.DataFrame,
-    forecast: pd.DataFrame,
-    metrics: dict[str, float],
-    last_year: int,
-    last_month: int,
-    p66: dict,
-    p90: dict,
-) -> dict:
+def fit_model(train: pd.DataFrame) -> HistGradientBoostingRegressor:
+    model = HistGradientBoostingRegressor(
+        max_depth=6,
+        learning_rate=0.06,
+        max_iter=400,
+        min_samples_leaf=20,
+        l2_regularization=0.1,
+        random_state=42,
+    )
+    model.fit(train[FEATURE_COLS], train["y"])
+    return model
+
+
+def pack_backtest(comparison: pd.DataFrame, metrics: dict[str, float], year: int) -> dict:
     top_mae = (
         comparison.assign(abs_err=lambda x: x["error"].abs())
         .groupby(["ubigeo", "distrito", "provincia"], as_index=False)
@@ -202,35 +212,44 @@ def build_dashboard_payload(
         )
         .sort_values("casos_real", ascending=False)
     )
-
     dep_series = (
         comparison.groupby("mes", as_index=False)
         .agg(real=("casos", "sum"), predicho=("predicho", "sum"))
     )
+    annual_real = float(comparison["casos"].sum())
+    annual_pred = float(comparison["predicho"].sum())
+    annual_pct = abs(annual_real - annual_pred) / max(annual_real, 1.0) * 100
+    return {
+        "anio": year,
+        "mae_distrito": round(metrics["mae"], 2),
+        "rmse_distrito": round(metrics["rmse"], 2),
+        "mae_departamento": round(metrics["mae_dep"], 2),
+        "rmse_departamento": round(metrics["rmse_dep"], 2),
+        "casos_anual_real": round(annual_real, 1),
+        "casos_anual_predicho": round(annual_pred, 1),
+        "error_anual_pct": round(annual_pct, 2),
+        "n_distritos": int(comparison["ubigeo"].nunique()),
+        "departamento": dep_series.to_dict(orient="records"),
+        "backtest_distritos": comparison.to_dict(orient="records"),
+        "resumen_distritos": top_mae.round(2).to_dict(orient="records"),
+    }
 
-    month_ref = int(comparison["mes"].max())
-    map_backtest = (
-        comparison[comparison["mes"] == month_ref][
-            ["ubigeo", "distrito", "provincia", "lat", "lon", "casos", "predicho"]
-        ].copy()
-    )
-    map_backtest["tipo"] = "backtest"
-    map_backtest["periodo"] = f"{TEST_YEAR}-{month_ref:02d}"
 
-    h1 = forecast[forecast["horizonte"] == 1].copy()
-    h1["riesgo"] = [
-        risk_level(p, p66.get(u, 0), p90.get(u, 0))
-        for u, p in zip(h1["ubigeo"], h1["predicho"])
-    ]
-
+def build_forecast_block(
+    forecast: pd.DataFrame,
+    p66: dict,
+    p90: dict,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     forecast_out = forecast.copy()
     forecast_out["riesgo"] = [
         risk_level(p, p66.get(u, 0), p90.get(u, 0))
         for u, p in zip(forecast_out["ubigeo"], forecast_out["predicho"])
     ]
-
+    h1 = forecast_out[forecast_out["horizonte"] == 1].copy()
+    # Short-horizon ranking (first 3 months) for the action panel
+    near = forecast_out[forecast_out["horizonte"] <= 3]
     ranking = (
-        forecast_out.groupby(
+        near.groupby(
             ["ubigeo", "distrito", "provincia", "lat", "lon"], as_index=False
         )
         .agg(pred_promedio=("predicho", "mean"), pred_max=("predicho", "max"))
@@ -240,36 +259,7 @@ def build_dashboard_payload(
         risk_level(p, p66.get(u, 0), p90.get(u, 0))
         for u, p in zip(ranking["ubigeo"], ranking["pred_promedio"])
     ]
-
-    return {
-        "meta": {
-            "titulo": "Vigilancia predictiva de dengue — Lambayeque",
-            "anio_test": TEST_YEAR,
-            "horizonte_meses": HORIZON,
-            "ultimo_dato": f"{last_year}-{last_month:02d}",
-            "fuente_casos": "CDC/MINSA datos abiertos vigilancia dengue",
-            "fuente_clima": "Open-Meteo Archive API + ICEN (ENFEN)",
-            "modelo": "HistGradientBoostingRegressor (log1p casos) por panel distrital",
-            "mae_distrito": round(metrics["mae"], 2),
-            "rmse_distrito": round(metrics["rmse"], 2),
-            "mae_departamento": round(metrics["mae_dep"], 2),
-            "rmse_departamento": round(metrics["rmse_dep"], 2),
-            "n_distritos": int(comparison["ubigeo"].nunique()),
-            "nota": (
-                "Backtest 2024 = one-month-ahead with observed lags. "
-                "Operational forecast uses month climatology and recursive predicted cases."
-            ),
-        },
-        "departamento_2024": dep_series.to_dict(orient="records"),
-        "backtest_distritos": comparison.to_dict(orient="records"),
-        "resumen_distritos_2024": top_mae.round(2).to_dict(orient="records"),
-        "pronostico": forecast_out.to_dict(orient="records"),
-        "ranking_accion": ranking.round(2).to_dict(orient="records"),
-        "mapa_mes_ref": map_backtest.to_dict(orient="records"),
-        "mapa_pronostico_h1": h1[
-            ["ubigeo", "distrito", "provincia", "lat", "lon", "anio", "mes", "predicho", "riesgo"]
-        ].to_dict(orient="records"),
-    }
+    return forecast_out, h1, ranking
 
 
 def main() -> None:
@@ -280,53 +270,104 @@ def main() -> None:
     raw, cat_maps = encode_categories(raw)
     raw = add_lags(raw)
 
-    # After zero-filling months, the first 3 months per district lack full lags
     model_df = raw.dropna(subset=FEATURE_COLS).reset_index(drop=True)
     model_df["y"] = np.log1p(model_df["casos"])
 
-    train = model_df[model_df["anio"] < TEST_YEAR]
-    test = model_df[model_df["anio"] == TEST_YEAR]
-    print(f"Train: {len(train)} | Test {TEST_YEAR}: {len(test)}")
+    BACKTEST_YEARS = (2024, 2025)
+    validaciones: dict[str, dict] = {}
+    last_model = None
+    last_comparison = None
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    model = HistGradientBoostingRegressor(
-        max_depth=6,
-        learning_rate=0.06,
-        max_iter=400,
-        min_samples_leaf=20,
-        l2_regularization=0.1,
-        random_state=42,
-    )
-    model.fit(train[FEATURE_COLS], train["y"])
+    for year in BACKTEST_YEARS:
+        train = model_df[model_df["anio"] < year]
+        test = model_df[model_df["anio"] == year]
+        print(f"\n=== Train < {year} | Test {year}: {len(train)} / {len(test)} ===")
+        model = fit_model(train)
+        comparison, metrics = evaluate_backtest(model, test)
+        pack = pack_backtest(comparison, metrics, year)
+        validaciones[str(year)] = pack
+        print(
+            f"MAE dist {pack['mae_distrito']} | MAE dep {pack['mae_departamento']} | "
+            f"annual {pack['casos_anual_real']:.0f} vs {pack['casos_anual_predicho']:.1f} "
+            f"({pack['error_anual_pct']:.1f}%)"
+        )
+        last_model = model
+        last_comparison = comparison
+        comparison.to_csv(OUT_DIR / f"backtest_distritos_{year}.csv", index=False)
+        (
+            comparison.groupby(["anio", "mes"], as_index=False)
+            .agg(real=("casos", "sum"), predicho=("predicho", "sum"))
+            .to_csv(OUT_DIR / f"backtest_departamento_{year}.csv", index=False)
+        )
 
-    comparison, metrics = evaluate_backtest(model, test)
-    print(f"\n=== District backtest {TEST_YEAR} ===")
-    print(f"District MAE: {metrics['mae']:.2f} | RMSE: {metrics['rmse']:.2f}")
-    print(
-        f"Department MAE (sum): {metrics['mae_dep']:.2f} | "
-        f"RMSE: {metrics['rmse_dep']:.2f}"
-    )
+    assert last_model is not None and last_comparison is not None
 
     BASE.joinpath("models").mkdir(parents=True, exist_ok=True)
-
     joblib.dump(
-        {"model": model, "features": FEATURE_COLS, "cat_maps": cat_maps},
+        {"model": last_model, "features": FEATURE_COLS, "cat_maps": cat_maps},
         MODEL,
     )
-    print(f"Model: {MODEL}")
+    print(f"\nModel (trained through {TEST_YEAR - 1}): {MODEL}")
 
     work = raw.sort_values(["ubigeo", "anio", "mes"]).copy()
     last_year = int(work["anio"].max())
     last_month = int(work.loc[work["anio"] == last_year, "mes"].max())
+    print(f"Forecast origin: {last_year}-{last_month:02d} | horizon: {HORIZON} months")
 
-    forecast = recursive_forecast(model, work, cat_maps, last_year, last_month)
-
+    forecast = recursive_forecast(last_model, work, cat_maps, last_year, last_month)
     hist = work.groupby("ubigeo")["casos"]
     p66 = hist.quantile(0.66).to_dict()
     p90 = hist.quantile(0.90).to_dict()
+    forecast_out, h1, ranking = build_forecast_block(forecast, p66, p90)
 
-    payload = build_dashboard_payload(
-        comparison, forecast, metrics, last_year, last_month, p66, p90
+    forecast_out.to_csv(OUT_FORECAST, index=False)
+    (
+        forecast_out.groupby(["anio", "mes"], as_index=False)
+        .agg(predicho=("predicho", "sum"))
+        .sort_values(["anio", "mes"])
+        .to_csv(OUT_FORECAST_DEP, index=False)
     )
+    print("\n=== Forecast totals by year ===")
+    print(
+        forecast_out.groupby("anio")["predicho"].sum().round(1).to_string()
+    )
+
+    # Default view = latest backtest year; keep legacy keys for older markup
+    latest = validaciones[str(TEST_YEAR)]
+    payload = {
+        "meta": {
+            "titulo": "Vigilancia predictiva de dengue — Lambayeque",
+            "anio_test": TEST_YEAR,
+            "anios_validacion": list(BACKTEST_YEARS),
+            "horizonte_meses": HORIZON,
+            "ultimo_dato": f"{last_year}-{last_month:02d}",
+            "fuente_casos": "CDC/MINSA datos abiertos vigilancia dengue",
+            "fuente_clima": "Open-Meteo Archive API + ICEN (ENFEN)",
+            "modelo": "HistGradientBoostingRegressor (log1p casos) por panel distrital",
+            "mae_distrito": latest["mae_distrito"],
+            "rmse_distrito": latest["rmse_distrito"],
+            "mae_departamento": latest["mae_departamento"],
+            "rmse_departamento": latest["rmse_departamento"],
+            "n_distritos": latest["n_distritos"],
+            "nota": (
+                "Backtests 2024 and 2025 = one-month-ahead with observed lags "
+                "(each year trained only on prior years). "
+                "Forecast 2026–2027 uses month climatology and recursive predicted cases."
+            ),
+        },
+        "validaciones": validaciones,
+        "departamento_backtest": latest["departamento"],
+        "departamento_2024": validaciones["2024"]["departamento"],
+        "backtest_distritos": latest["backtest_distritos"],
+        "resumen_distritos_backtest": latest["resumen_distritos"],
+        "resumen_distritos_2024": validaciones["2024"]["resumen_distritos"],
+        "pronostico": forecast_out.to_dict(orient="records"),
+        "ranking_accion": ranking.round(2).to_dict(orient="records"),
+        "mapa_pronostico_h1": h1[
+            ["ubigeo", "distrito", "provincia", "lat", "lon", "anio", "mes", "predicho", "riesgo"]
+        ].to_dict(orient="records"),
+    }
 
     OUT_JSON.parent.mkdir(parents=True, exist_ok=True)
     OUT_JSON.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -338,6 +379,16 @@ def main() -> None:
                 "features": FEATURE_COLS,
                 "cat_maps": cat_maps,
                 "metrics": payload["meta"],
+                "validaciones": {
+                    y: {
+                        "mae_distrito": v["mae_distrito"],
+                        "mae_departamento": v["mae_departamento"],
+                        "casos_anual_real": v["casos_anual_real"],
+                        "casos_anual_predicho": v["casos_anual_predicho"],
+                        "error_anual_pct": v["error_anual_pct"],
+                    }
+                    for y, v in validaciones.items()
+                },
             },
             ensure_ascii=False,
             indent=2,

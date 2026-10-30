@@ -1,0 +1,305 @@
+ 
+ 
+ 
+Campus Chiclayo 
+ 
+Ingeniería de sistemas e informática 
+ 
+Proyecto de Investigación 
+Predicción temprana de brotes de dengue en Lambayeque mediante machine 
+learning y variables climáticas 
+ 
+Integrantes 
+CONTRERAS DELGADO JORGE RENZO PAOLO (U22202038) 
+CAMPOS ZAQUINAULA JORGE MAURICIO (U21301723) 
+ 
+Docentes 
+Dr. Hugo Medina 
+ 
+ 
+ 
+Chiclayo, Perú 
+Ciclo 
+2026-2 
+ 
+
+2 
+ 
+ÍNDICE 
+ 
+RESUMEN ................................ ................................ ................................ ................  3 
+1. PROBLEMA DE INVESTIGACIÓN ................................ ................................ ...... 4 
+2. OBJETIVOS ................................ ................................ ................................ ....... 4 
+3. FUNDAMENTACIÓN ................................ ................................ .........................  5 
+4. DISEÑO METODOLÓGICO DE INVESTIGACIÓN ................................ ................  6 
+5. BIBLIOGRAFÍA................................ ................................ ................................  12 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+3 
+RESUMEN 
+  
+4 
+1. PROBLEMA DE INVESTIGACIÓN 
+Lambayeque es una zona de transmisión estacional de dengue y ha registrado brotes graves en años 
+recientes. La respuesta sanitaria suele ser reactiva: el control vectorial y la vigilancia se intensifican cuando 
+el incremento de casos ya está en curso. Ello se asocia, entre otras causas, a que los datos abie rtos de 
+vigilancia (CDC-MINSA) y de clima (SENAMHI/IGP) no se integran de forma sistemática en una señal 
+cuantitativa de riesgo a corto plazo. 
+Existen estudios en el Perú con Prophet a escala de varios departamentos, o con modelos climáticos 
+regionales que incluyen Lambayeque, pero no cubren del todo la necesidad de un prototipo informático 
+local, reproducible y de bajo costo, validado con 2024 y orientado a estimar los periodos siguientes. Abordar 
+este vacío es conveniente porque una predicción temprana pu ede apoyar una alerta más oportuna, sin 
+recoger datos primarios ni encuestar personas. 
+El problema se alinea con las líneas UTP de aplicaciones TIC para la salud y computación científica, y con 
+las competencias de soluciones informáticas, análisis de sistemas y gestión de sistemas de la información. 
+Pregunta de investigación: ¿De qué manera un modelo de machine learning entrenado con casos históricos 
+de dengue y variables climáticas de datos abiertos permite predecir de forma  temprana los brotes en el 
+departamento de Lambayeque?  
+2. OBJETIVOS 
+2.1. Objetivo general 
+Predecir de manera temprana los brotes de dengue en el departamento de Lambayeque mediante un 
+modelo de machine learning (HistGradientBoosting, con baseline Random Forest) que integre 
+vigilancia epidemiológica y variables climáticas de datos abiertos oficiales, con alcance a casos 
+mensuales notificados por distrito en 2015–2024, evaluación frente a 2024 y estimación de periodos 
+posteriores como etapa final de alerta temprana. 
+2.2. Objetivos específicos 
+2.2.1. Integrar los casos mensuales de dengue notificados en Lambayeque (2015–2024) 
+a nivel de distrito, completando meses sin notificación con cero, con variables 
+climáticas de fuentes abiertas (precipitación, temperatura máxima/mínima, 
+humedad e ICEN) en un panel mensual reproducible. 
+2.2.2. Entrenar un modelo de HistGradientBoostingRegressor (y un baseline Random 
+Forest) con el periodo 2015–2023, usando como entradas el mes, identificadores 
+espaciales, rezagos de casos y rezagos climáticos, para estimar los casos mensuales 
+por distrito. 
+2.2.3. Evaluar la precisión y el error del modelo (MAE y RMSE) respecto a los registros 
+reales de 2024 a escala distrital y agregada departamental, implementar un panel 
+5 
+web de apoyo a la decisión y, como etapa final del objetivo, estimar con el modelo 
+validado los casos de los periodos posteriores como apoyo a una alerta temprana. 
+ 
+2.3. Hipótesis 
+Un modelo de machine learning entrenado con casos históricos de dengue por distrito y variables 
+climáticas estima los casos mensuales en Lambayeque con un error cuantificable frente a 2024 y 
+permite proyectar el riesgo a corto plazo en los periodos posteriores. 
+3. FUNDAMENTACIÓN 
+Predecir con anticipación un brote de dengue no es solo un tema de salud pública: también es un problema 
+de datos. En departamentos co mo Lambayeque la transmisión suele concentrarse en ciertos meses, sube 
+con condiciones favorables para el mosquito (calor, lluvia, humedad) y, en la costa norte, se mezcla con el 
+efecto de El Niño. Al mismo tiempo, los registros oficiales no siempre son re gulares: hay periodos con 
+pocos casos, años de explosión epidémica y posibles huecos de notificación. Por eso, en los últimos años 
+han aparecido trabajos que intentan anticipar la incidencia con clima, series temporales o machine learning, 
+y conviene revisar qué ya está resuelto y qué sigue abierto para un prototipo local. 
+ 
+En el Perú, Mills y Donnelly [1] estudiaron Piura, Tumbes y Lambayeque entre 2010 y 2021. Relacionaron 
+la incidencia mensual con temperatura máxima, lluvias extremas, sequía e índices asociados a El Niño, y 
+probaron un pronóstico a un mes vista. Según reportan, lograron detectar todos los brotes por encima de 
+umbrales de 50 y 150 casos por 100 000 habitantes, con poca falsa alarma. Ese resultado importa porque 
+confirma que, en Lambayeque, el clima sí aporta información útil para una alerta temprana. Aun así, su 
+análisis se queda en una escala agregada y no entrega un sistema informático sencillo, reproducible con 
+datos abiertos recientes ni pensado para priorizar distritos. 
+ 
+Más cerca en e l tiempo, Rojas-Paucar et al. [2] usaron Prophet con series del MINSA (2000 –2024) en 
+departamentos de “brote explosivo”. Entrenaron hasta 2023, midieron el error en 2024 y proyectaron 2025–
+2027. En Lambayeque el modelo se comportó mejor que en otras region es; en cambio, en La Libertad y 
+Lima el desfase fue muy grande, y en zonas de selva tendieron a sobredimensionar a partir de picos 
+históricos. Los propios autores advierten que, al depender casi solo del historial de casos, Prophet se debilita 
+cuando el brote cambia de golpe. De ahí se desprende una lección práctica: validar contra 2024 y mirar 
+periodos siguientes tiene sentido, pero para Lambayeque todavía falta meter clima de forma explícita y 
+bajar la escala espacial. 
+ 
+6 
+Fuera del enfoque solo univariado, Sebastianelli et al. [3] armaron un ensemble (CatBoost, SVM y LSTM, 
+combinados con Random Forest) para estimar la tasa de incidencia un mes adelante en estados de Brasil, y 
+mostraron que la misma lógica puede trasladarse a Perú. El valor de ese trabajo está menos en “inventar” 
+un algoritmo nuevo y más en insistir en pipelines reproducibles y en mezclar señales climáticas con otras 
+variables. Zhao et al. [4], en Colombia, compararon Random Forest con redes neuronales para casos 
+semanales a distintos horizontes. El bosque aleatorio superó a la red; el error crecía al alargar el horizonte, 
+y las variables ambientales pesaban más en el corto plazo. Ambos estudios empujan a considerar ensembles 
+o RF/boosting cuando se busca una alerta de pocas semanas o meses, aunque ninguno reemplaza una prueba 
+concreta con el panel distrital de Lambayeque. 
+ 
+También hay evidencia de que el nivel local importa. Salim et al. [5] trabajaron con cinco distritos de 
+Selangor y probaron varios clasificadores usando temperatura, humedad, lluvia y viento. El mejor modelo 
+llegó a una exactitud cercana al 70 %, pero la sensibilidad bajó cuando las clases estaban desbalanceadas; 
+además, la semana del año resultó muy influyente. Aunque el contexto epidemiológico no es el peruano, el 
+mensaje es útil: si la decisión sanitaria se toma por distrito, conviene modelar cerca de esa escala y no solo 
+con totales departamentales. 
+4. DISEÑO METODOLÓGICO DE INVESTIGACIÓN 
+El trabajo es cuantitativo y aplicado. Se apoya en un experimento computacional con datos  
+secundarios abiertos; no hay encuestas ni trabajo de campo. La unidad de análisis es el  distrito–
+mes en Lambayeque, de 2015 a 2024.  
+4.1. Integración de la vigilancia epidemiológica y el clima  
+Se tomó la base abierta de vigilancia de dengue del Centro Nacional de Epidemiología, Prevención 
+y Control de Enfermedades (CDC -MINSA). Se retuvieron únicamente los registros del 
+departamento de Lambayeque. Cada fila se interpretó como un caso notificado. A partir del año y 
+la semana epidemiológica se construyó una fe cha de referencia; luego los casos se sumaron por 
+distrito, año y mes. 
+En la serie mensual aparecieron meses sin notificación. Para no romper la continuidad temporal, 
+se armó un panel completo distrito × mes (2015 –2024) y esos huecos se completaron con cer o. A 
+cada distrito se le asignó un punto geográfico representativo y un nodo climático cercano.  
+Las variables climáticas mensuales se obtuvieron de la API histórica de Open -Meteo. El índice 
+costero El Niño (ICEN, ENFEN) se incorporó por año y mes. El producto de esta etapa fue un 
+conjunto de datos mensual por distrito, con casos y clima en la misma estructura, listo para el 
+modelado. 
+ 
+ 
+7 
+4.2. Construcción de variables y entrenamiento del modelo  
+Sobre el panel se calcularon, dentro de cada distrito, rezagos de casos a uno, dos y tres meses, una 
+media móvil corta de casos, y rezagos de precipitación, temperatura, humedad e ICEN. El mes 
+calendario se representó con transformaciones seno y coseno, y se añadieron identificadores de 
+provincia y distrito. La variable para estimar se transformó con el logaritmo de uno más el número 
+de casos, para atenuar el peso de los picos extremos.  
+El entrenamiento usó los meses comprendidos entre 2015 y 2023. El algor itmo principal fue un 
+regressor de gradiente histograma (HistGradientBoosting). Como referencia de control se mantuvo 
+un Random Forest entrenado en pruebas a escala departamental. El ajuste se realizó en entorno 
+Python, con las librerías habituales de mani pulación tabular y aprendizaje automático.  
+4.3. Validación en 2024 y presentación visual  
+El año 2024 se reservó como conjunto de prueba. Para cada mes se generó una predicción a un 
+paso, empleando los rezagos observados del pasado inmediato. El error se mi dió con el error 
+absoluto medio (MAE) y la raíz del error cuadrático medio (RMSE), primero a escala distrito–mes 
+y después a escala departamento, sumando las predicciones distritales del mismo mes.  
+Los resultados se organizaron en un panel de consulta: curva departamental real frente a predicha, 
+series por distrito, comparación de totales anuales, mapa de riesgo y un orden de prioridad 
+territorial. Las figuras que acompañan el apartado de resultados provienen de esa salida.  
+4.4. Estimación de periodos posteriores 
+4.5. Análisis e interpretación 
+ 
+5. RESULTADOS 
+5.1. Desempeño a escala departamental (2024)  
+En la validación de 2024 se obtuvieron los siguientes valores:  
+Escala MAE RMSE 
+Distrito (promedio distrito–
+mes) 
+11,4 31,8 
+Departamento (suma mensual 
+de distritos) 
+331,0 561,7 
+Durante ese año se registraron 9 305 casos en Lambayeque. La Figura 1 muestra la serie mensual 
+agregada. La incidencia real sube con fuerza entre enero y marzo–abril (pico cercano a 2 700 casos 
+en marzo) y cae de forma marcada desde  mayo. La predicción sigue esa estacionalidad: anticipa 
+el ascenso y el descenso, pero se queda corta en la cresta. En febrero, marzo y abril la 
+subestimación es clara; a partir de mayo la curva predicha se acerca bastante a la observada, y 
+entre julio y diciembre ambas series se mantienen en niveles bajos y próximos.  
+8 
+Figura 1. Casos mensuales reales y predichos en Lambayeque, 2024 (suma de distritos).  
+Ese patrón es coherente con un año que todavía arrastra la huella de la epidemia extrema de 2023: 
+el modelo, entrenado con ese historial heterogéneo, tiende a ser conservador cuando la transmisión 
+se dispara. 
+ 
+5.2. Desempeño por distrito  
+La Figura 2 detalla el backtest en los seis distritos con mayor carga: Chiclayo, Lambayeque, 
+Ferreñafe, La Victoria, José Leonardo Ortiz y Patapo. En todos se reconoce la temporada alta en 
+el primer semestre y la baja en el segundo. Chiclayo concentra el mayor volumen; ahí la predicción 
+acompaña el ascenso, aunque el pico real supera al estimado. En Lambayeque, Ferreñafe y La  
+Victoria aparece, en varios tramos, un ligero desfase de un mes en el máximo predicho. En José 
+Leonardo Ortiz y Patapo la subestimación del pico es más acentuada, mientras que la segunda 
+mitad del año vuelve a alinearse.  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+9 
+Figura 2. Comparación mensual real–predicha en 2024 para los distritos con más casos.  
+ 
+La Figura 3 resume los totales anuales. Chiclayo lidera con cerca de 1 750 casos reales frente a 
+una suma predicha cercana a 1 300. Siguen Lambayeque, Ferreñafe, La Victoria y José Leonardo 
+Ortiz, siempre con predicción por debajo del total observado. El orden relativo de los distritos más 
+afectados se conserva; lo que falla es, otra vez, la magnitud.  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Figura 3. Totales anuales de casos reales y predichos en los principales distritos, 2024. 
+
+10 
+La Figura 4 ordena el MAE mensual. Los errores absolutos más altos coinciden con los distritos 
+de mayor carga: Chiclayo (alrededor de 55 casos/mes), Lambayeque (~51), José Leonardo Ortiz 
+(~40), Ferreñafe (~37) y La Victoria (~34). Distritos como Cay alti, Illimo o Pueblo Nuevo 
+muestran MAE cercanos a 10 –12. Eso no implica necesariamente “mejor modelo” en términos 
+relativos: al haber menos casos, el error absoluto tiende a ser menor.  
+Figura 4. Error absoluto medio mensual por distrito (principales por carga de casos), 2024. 
+ 
+5.3. Señal espacial de riesgo y priorización  
+Además del backtest, se generó una salida operativa de corto plazo. La Figura 5 sitúa los distritos 
+en el mapa según el pronóstico del mes siguiente, con categorías alto, medio y bajo. Ja yanca 
+destaca en riesgo alto; Motupe aparece con carga relevante; Chiclayo, Ferreñafe y Tuman figuran 
+en nivel medio; Olmos, en bajo en esa corrida. El tamaño del marcador refleja la magnitud 
+predicha. 
+ 
+ 
+ 
+ 
+
+11 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Figura 5. Mapa de riesgo distrital según el pronóstico del mes siguiente.  
+ 
+La Figura 6 ordena la prioridad según la predicción promedio a tres meses. Motupe encabeza el 
+listado (cerca de 52 casos promedio), seguido de Jayanca (~28). Más abajo se ubican Tuman, 
+Ferreñafe, Chiclayo y Olmos, con valores claramente menores. La lectura práctica es territorial: el 
+modelo no solo describe 2024; también sugiere dónde concentrar vigilancia en el horizonte 
+inmediato. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Figura 6. Ranking distrital de prioridad según la predicción promedio a tres meses. 
+
+12 
+ 
+6. BIBLIOGRAFÍA 
+[1] C. Mills y C. A. Donnelly, «Climate-based modelling and forecasting of dengue in three 
+endemic departments of Peru», PLOS Neglected Tropical Diseases, vol. 18, n.º 12, p. e0012596, 
+dic. 2024, doi: 10.1371/journal.pntd.0012596. 
+[2] W. Rojas-Paucar, A. O. Carranza López, E. J. Francia-Candiotti, E. A. Pareja-Granda y E. L. 
+Medina Soto, «Aplicación del modelo Prophet para la predicción de brotes explosivos de dengue 
+en regiones críticas de Perú: un estudio de series temporales 2000–2024», Revista Cubana de 
+Investigaciones Biomédicas, vol. 44, n.º supl., p. e3991, oct. 2025. [En línea]. Disponible: 
+https://revibiomedica.sld.cu/index.php/ibi/article/view/3991. 
+[3] A. Sebastianelli et al.,«A reproducible ensemble machine learning approach to forecast dengue 
+outbreaks», Scientific Reports, vol. 14, p. 3807, 2024, doi: 10.1038/s41598-024-52796-9. 
+[4] N. Zhao et al., «Machine learning and dengue forecasting: Compari ng random forests and artificial 
+neural networks for predicting dengue burden at national and sub -national scales in Colombia»,  PLOS 
+Neglected Tropical Diseases, vol. 14, n.º 9, p. e0008056, 2020, doi: 10.1371/journal.pntd.0008056. 
+[5] N. A. Mohd Salim et al., «Prediction of dengue outbreak in Selangor Malaysia using machine learning 
+techniques», Scientific Reports, vol. 11, p. 939, 2021, doi: 10.1038/s41598-020-79193-2. 

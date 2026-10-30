@@ -14,7 +14,7 @@
       --bg-2: #f7ebe4;
       --ink: #18323a;
       --muted: #5a747c;
-      --panel: rgba(255, 255, 255, 0.82);
+      --panel: rgba(255, 255, 255, 0.88);
       --panel-solid: #ffffff;
       --line: #c9dde2;
       --accent: #3aa8a0;
@@ -27,6 +27,8 @@
       --medio: #ea8c5d;
       --bajo: #6fb8a8;
       --shadow: 0 12px 32px rgba(24, 50, 58, 0.08);
+      --shell: min(1520px, calc(100% - 2.5rem));
+      --gap: 1rem;
     }
     * { box-sizing: border-box; }
     body {
@@ -34,23 +36,33 @@
       font-family: "Manrope", sans-serif;
       color: var(--ink);
       background:
-        radial-gradient(900px 480px at 8% -8%, #c8ebe6 0%, transparent 58%),
-        radial-gradient(800px 420px at 92% 0%, #f7d5c8 0%, transparent 52%),
-        radial-gradient(700px 380px at 70% 100%, #c5daf0 0%, transparent 45%),
+        radial-gradient(1100px 520px at 0% -10%, #c8ebe6 0%, transparent 55%),
+        radial-gradient(900px 460px at 100% 0%, #f7d5c8 0%, transparent 50%),
+        radial-gradient(800px 420px at 85% 100%, #c5daf0 0%, transparent 42%),
         linear-gradient(165deg, var(--bg) 0%, #eef6f7 45%, var(--bg-2) 100%);
       min-height: 100vh;
+      text-align: left;
     }
-    header {
-      padding: 2.4rem 1.5rem 1.4rem;
-      max-width: 1200px;
+    .shell {
+      width: var(--shell);
+      margin-inline: auto;
+      padding-inline: 0;
+    }
+    header.top {
+      width: var(--shell);
       margin: 0 auto;
+      padding: 1.5rem 0 1.1rem;
+      display: grid;
+      grid-template-columns: minmax(0, 1.6fr) minmax(260px, 0.9fr);
+      gap: 1.25rem 2rem;
+      align-items: end;
     }
     .brand {
       font-family: "Syne", sans-serif;
       font-weight: 800;
-      font-size: clamp(2rem, 4.5vw, 3rem);
+      font-size: clamp(1.85rem, 3.2vw, 2.55rem);
       line-height: 1.05;
-      margin: 0 0 0.55rem;
+      margin: 0 0 0.4rem;
       letter-spacing: -0.03em;
       background: linear-gradient(105deg, #18323a 20%, #1f7a74 55%, #e07a5f 100%);
       -webkit-background-clip: text;
@@ -59,47 +71,74 @@
     }
     .lead {
       margin: 0;
-      max-width: 40rem;
+      max-width: 36rem;
       color: var(--muted);
-      font-size: 1.05rem;
+      font-size: 0.98rem;
       line-height: 1.45;
+    }
+    .header-controls {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.7rem;
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,0.8);
+      border-radius: 18px;
+      padding: 0.95rem 1.05rem;
+      box-shadow: var(--shadow);
+    }
+    .header-controls label {
+      font-weight: 700;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--accent-deep);
+    }
+    .year-row {
+      display: flex;
+      gap: 0.55rem;
+      align-items: center;
+    }
+    .year-row select {
+      flex: 1;
+      font-weight: 700;
+      font-size: 1.05rem;
     }
     .meta-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.55rem;
-      margin-top: 1.15rem;
+      gap: 0.4rem;
+      grid-column: 1 / -1;
     }
     .chip {
       border: 1px solid transparent;
       background: linear-gradient(var(--panel-solid), var(--panel-solid)) padding-box,
                   linear-gradient(120deg, #9fd9d2, #f3c4b0, #b9d8f0) border-box;
-      border-radius: 12px;
-      padding: 0.4rem 0.8rem;
-      font-size: 0.84rem;
+      border-radius: 10px;
+      padding: 0.32rem 0.7rem;
+      font-size: 0.8rem;
       font-weight: 600;
       color: var(--ink);
-      box-shadow: 0 4px 14px rgba(24, 50, 58, 0.05);
     }
     main {
-      max-width: 1200px;
+      width: var(--shell);
       margin: 0 auto;
-      padding: 0 1.5rem 3rem;
+      padding: 0 0 2.75rem;
       display: grid;
-      gap: 1.2rem;
+      gap: var(--gap);
     }
     .kpis {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 0.9rem;
+      gap: var(--gap);
     }
     .kpi {
       position: relative;
       background: var(--panel);
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.7);
-      border-radius: 18px;
-      padding: 1.05rem 1.15rem 1.1rem;
+      border-radius: 16px;
+      padding: 0.95rem 1rem 1rem 1.15rem;
       box-shadow: var(--shadow);
       overflow: hidden;
     }
@@ -107,7 +146,7 @@
       content: "";
       position: absolute;
       inset: 0 auto 0 0;
-      width: 5px;
+      width: 4px;
       background: linear-gradient(180deg, var(--accent), var(--peach));
     }
     .kpi:nth-child(2)::before { background: linear-gradient(180deg, #7eb8de, #b9d8f0); }
@@ -117,67 +156,153 @@
       display: block;
       font-family: "Syne", sans-serif;
       font-weight: 700;
-      font-size: 1.7rem;
-      margin-top: 0.3rem;
+      font-size: 1.55rem;
+      margin-top: 0.25rem;
       color: var(--ink);
     }
-    .kpi span { color: var(--muted); font-size: 0.84rem; font-weight: 500; }
-    .grid-2 {
+    .kpi span { color: var(--muted); font-size: 0.8rem; font-weight: 500; }
+    .spotlight {
       display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
-      gap: 1.2rem;
+      grid-template-columns: minmax(280px, 0.85fr) minmax(0, 1.35fr);
+      gap: var(--gap);
+      align-items: stretch;
+    }
+    .best-hero {
+      height: 100%;
+      background:
+        linear-gradient(160deg, rgba(31,122,116,0.92) 0%, rgba(58,168,160,0.88) 55%, rgba(234,140,93,0.75) 100%);
+      border: none;
+      border-radius: 20px;
+      padding: 1.35rem 1.4rem 1.45rem;
+      box-shadow: 0 16px 36px rgba(31, 122, 116, 0.22);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 220px;
+    }
+    .best-hero .label {
+      color: rgba(255,255,255,0.82);
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin: 0 0 0.55rem;
+    }
+    .best-hero .district-name {
+      font-family: "Syne", sans-serif;
+      font-weight: 800;
+      font-size: clamp(1.5rem, 2.4vw, 2rem);
+      color: #fff;
+      margin: 0;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+    .best-hero .pct {
+      font-family: "Syne", sans-serif;
+      font-weight: 800;
+      font-size: clamp(2.8rem, 5vw, 3.6rem);
+      color: #fff;
+      line-height: 1;
+      margin: 0.7rem 0 0.55rem;
+    }
+    .best-hero .detail {
+      margin: 0;
+      color: rgba(255,255,255,0.88);
+      font-size: 0.9rem;
+      line-height: 1.4;
+      max-width: 22rem;
+    }
+    .best-table-card {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .best-table-card .table-scroll {
+      flex: 1;
+      overflow: auto;
+      max-height: 280px;
+    }
+    .pct-good { color: #1f7a72; font-weight: 700; }
+    .pct-mid { color: #c45c26; font-weight: 700; }
+    .pct-bad { color: #e11d48; font-weight: 700; }
+    .ops-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.85fr);
+      gap: var(--gap);
+    }
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--gap);
     }
     section.card {
       background: var(--panel);
       backdrop-filter: blur(12px);
       border: 1px solid rgba(255, 255, 255, 0.75);
-      border-radius: 20px;
-      padding: 1.15rem 1.25rem 1.3rem;
+      border-radius: 18px;
+      padding: 1.05rem 1.15rem 1.15rem;
       box-shadow: var(--shadow);
+      min-width: 0;
     }
     section.card h2 {
       font-family: "Syne", sans-serif;
       font-weight: 700;
-      font-size: 1.28rem;
-      margin: 0 0 0.35rem;
+      font-size: 1.18rem;
+      margin: 0 0 0.3rem;
       letter-spacing: -0.02em;
       color: var(--ink);
+      text-align: left;
     }
     section.card p.help {
-      margin: 0 0 0.95rem;
+      margin: 0 0 0.85rem;
       color: var(--muted);
-      font-size: 0.92rem;
+      font-size: 0.88rem;
       line-height: 1.4;
+      text-align: left;
     }
+    .section-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 0.15rem;
+    }
+    .section-head .help { margin-bottom: 0.85rem; }
     #map {
-      height: 420px;
-      border-radius: 16px;
+      height: 460px;
+      border-radius: 14px;
       border: 2px solid var(--accent-soft);
       overflow: hidden;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.5);
     }
+    .side-scroll { max-height: 460px; overflow: auto; }
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.92rem;
+      font-size: 0.9rem;
     }
     th, td {
       text-align: left;
-      padding: 0.6rem 0.45rem;
+      padding: 0.55rem 0.4rem;
       border-bottom: 1px solid #e2eef1;
+      vertical-align: top;
     }
     th {
       color: var(--accent-deep);
       font-weight: 700;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
+      position: sticky;
+      top: 0;
+      background: rgba(255,255,255,0.96);
+      z-index: 1;
     }
     .badge {
       display: inline-block;
-      padding: 0.22rem 0.6rem;
+      padding: 0.2rem 0.55rem;
       border-radius: 8px;
-      font-size: 0.76rem;
+      font-size: 0.74rem;
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.04em;
@@ -199,16 +324,11 @@
     }
     .chart-wrap {
       position: relative;
-      height: 280px;
+      height: 300px;
       background: linear-gradient(180deg, #f7fcfb 0%, #ffffff 100%);
       border-radius: 14px;
-      padding: 0.4rem;
+      padding: 0.35rem;
       border: 1px solid #e5f2f0;
-    }
-    .chart-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.2rem;
     }
     .district-chart-head {
       display: flex;
@@ -221,9 +341,9 @@
     .district-chart-head .help { margin: 0; }
     .filters {
       display: flex;
-      gap: 0.6rem;
+      gap: 0.55rem;
       flex-wrap: wrap;
-      margin-bottom: 0.8rem;
+      margin-bottom: 0.7rem;
       align-items: center;
     }
     tr.clickable { cursor: pointer; transition: background 0.15s ease; }
@@ -233,7 +353,7 @@
       border: 1.5px solid var(--line);
       background: #fff;
       border-radius: 12px;
-      padding: 0.5rem 0.8rem;
+      padding: 0.48rem 0.75rem;
       font: inherit;
       color: var(--ink);
       outline: none;
@@ -244,12 +364,13 @@
       box-shadow: 0 0 0 3px rgba(58, 168, 160, 0.2);
     }
     footer {
-      max-width: 1200px;
+      width: var(--shell);
       margin: 0 auto;
-      padding: 0 1.5rem 2.5rem;
+      padding: 0 0 2.25rem;
       color: var(--muted);
-      font-size: 0.85rem;
+      font-size: 0.84rem;
       line-height: 1.45;
+      text-align: left;
     }
     .error {
       background: #fff1f2;
@@ -258,26 +379,81 @@
       padding: 1rem;
       border-radius: 14px;
     }
+    @media (max-width: 1100px) {
+      .ops-row { grid-template-columns: 1fr; }
+      #map, .side-scroll { height: auto; max-height: 380px; }
+      #map { height: 360px; }
+    }
     @media (max-width: 900px) {
-      .kpis, .grid-2, .chart-grid { grid-template-columns: 1fr; }
-      #map { height: 340px; }
+      header.top { grid-template-columns: 1fr; }
+      .kpis { grid-template-columns: 1fr 1fr; }
+      .spotlight, .chart-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 560px) {
+      .kpis { grid-template-columns: 1fr; }
+      :root { --shell: calc(100% - 1.5rem); }
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1 class="brand">Dengue Lambayeque</h1>
-    <p class="lead">
-      Panel de predicción por distrito para priorizar acciones de vigilancia y control.
-      Combina casos CDC con clima Open-Meteo e índice ICEN.
-    </p>
+  <header class="top">
+    <div>
+      <h1 class="brand">Dengue Lambayeque</h1>
+      <p class="lead">
+        Panel de predicción por distrito para priorizar vigilancia y control.
+        Casos CDC + clima Open-Meteo + ICEN.
+      </p>
+    </div>
+    <div class="header-controls">
+      <label for="yearSelect">Año de validación</label>
+      <div class="year-row">
+        <select id="yearSelect" aria-label="Elegir año de validación"></select>
+      </div>
+    </div>
     <div class="meta-row" id="meta-chips"></div>
   </header>
 
   <main>
     <div class="kpis" id="kpis"></div>
 
-    <div class="grid-2">
+    <div class="spotlight" id="best-section">
+      <div class="best-hero" id="best-hero">
+        <div>
+          <p class="label" id="bestTitle">Menor error por distrito</p>
+          <p class="district-name">—</p>
+        </div>
+        <div>
+          <p class="pct">—</p>
+          <p class="detail">Seleccione un año de validación.</p>
+        </div>
+      </div>
+      <section class="card best-table-card">
+        <div class="section-head">
+          <div>
+            <h2>Ranking de mejor ajuste</h2>
+            <p class="help" id="bestHelp">
+              Error anual |real − predicho| / real. Solo distritos con ≥10 casos (porcentaje interpretable).
+            </p>
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Distrito</th>
+                <th>Casos real</th>
+                <th>Predicho</th>
+                <th>Error %</th>
+              </tr>
+            </thead>
+            <tbody id="best-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <div class="ops-row">
       <section class="card">
         <h2>Mapa de riesgo (próximo mes)</h2>
         <p class="help">Color según percentil histórico de cada distrito. Clic en un punto para detalle.</p>
@@ -285,8 +461,8 @@
       </section>
       <section class="card">
         <h2>Prioridad de acción</h2>
-        <p class="help">Distritos con mayor predicción promedio en el horizonte de 3 meses.</p>
-        <div style="max-height: 420px; overflow: auto;">
+        <p class="help">Mayor predicción promedio a 3 meses.</p>
+        <div class="side-scroll">
           <table>
             <thead>
               <tr><th>#</th><th>Distrito</th><th>Pred.</th><th>Riesgo</th></tr>
@@ -299,15 +475,15 @@
 
     <div class="chart-grid">
       <section class="card">
-        <h2>Departamento 2024</h2>
-        <p class="help">Suma de predicciones distritales frente a casos observados.</p>
+        <h2 id="depChartTitle">Departamento</h2>
+        <p class="help">Suma de predicciones distritales frente a casos observados del año elegido.</p>
         <div class="chart-wrap"><canvas id="depChart"></canvas></div>
       </section>
       <section class="card">
         <div class="district-chart-head">
           <div>
             <h2 style="margin:0 0 0.35rem">Por distrito</h2>
-            <p class="help">Backtest 2024 y pronóstico operativo (h+1…h+3).</p>
+            <p class="help" id="districtHelp">Backtest del año elegido y pronóstico 2026–2027.</p>
           </div>
           <select id="districtSelect" aria-label="Elegir distrito"></select>
         </div>
@@ -316,7 +492,7 @@
     </div>
 
     <section class="card">
-      <h2>Detalle por distrito</h2>
+      <h2 id="detailTitle">Detalle por distrito</h2>
       <p class="help">Clic en una fila para ver su gráfico. Filtra por provincia o busca por nombre.</p>
       <div class="filters">
         <select id="provFilter"><option value="">Todas las provincias</option></select>
@@ -328,8 +504,9 @@
             <tr>
               <th>Distrito</th>
               <th>Provincia</th>
-              <th>Casos 2024</th>
-              <th>Pred 2024</th>
+              <th>Casos real</th>
+              <th>Predicho</th>
+              <th>Error %</th>
               <th>MAE</th>
               <th>Pronóstico h+1</th>
               <th>Riesgo</th>
@@ -350,44 +527,65 @@
     const CHART_REAL = "#18323a";
     const CHART_PRED = "#3aa8a0";
     let districtChart = null;
+    let depChart = null;
     let selectedUbigeo = null;
+    let dashboardData = null;
+    let activeYear = null;
+    let activeRows = [];
+    let mapReady = false;
+    const MIN_CASES_PCT = 10; // minimum annual cases for interpretable % error
 
     async function load() {
       try {
         const res = await fetch("./data/dashboard.json", { cache: "no-store" });
         if (!res.ok) throw new Error("No se pudo cargar data/dashboard.json. Ejecuta primero el pipeline.");
-        const data = await res.json();
-        render(data);
+        dashboardData = await res.json();
+        setupYearSelector(dashboardData);
+        renderStatic(dashboardData);
+        setYear(String(dashboardData.meta.anio_test || "2025"));
       } catch (err) {
         document.querySelector("main").innerHTML = `<div class="error">${err.message}</div>`;
       }
     }
 
-    function render(data) {
+    function setupYearSelector(data) {
+      const years = (data.meta.anios_validacion || Object.keys(data.validaciones || {})).map(String);
+      const sel = document.getElementById("yearSelect");
+      sel.innerHTML = "";
+      years.forEach(y => {
+        const opt = document.createElement("option");
+        opt.value = y;
+        opt.textContent = y;
+        sel.appendChild(opt);
+      });
+      sel.onchange = () => setYear(sel.value);
+    }
+
+    function getValidation(year) {
+      if (dashboardData.validaciones && dashboardData.validaciones[year]) {
+        return dashboardData.validaciones[year];
+      }
+      // Legacy single-year payload
+      return {
+        anio: Number(year),
+        mae_distrito: dashboardData.meta.mae_distrito,
+        rmse_distrito: dashboardData.meta.rmse_distrito,
+        mae_departamento: dashboardData.meta.mae_departamento,
+        rmse_departamento: dashboardData.meta.rmse_departamento,
+        casos_anual_real: null,
+        casos_anual_predicho: null,
+        error_anual_pct: null,
+        departamento: dashboardData.departamento_backtest || dashboardData.departamento_2024,
+        backtest_distritos: dashboardData.backtest_distritos,
+        resumen_distritos: dashboardData.resumen_distritos_backtest || dashboardData.resumen_distritos_2024,
+      };
+    }
+
+    function renderStatic(data) {
       const m = data.meta;
-      document.getElementById("meta-chips").innerHTML = [
-        `Último dato: ${m.ultimo_dato}`,
-        `Horizonte: ${m.horizonte_meses} meses`,
-        `${m.n_distritos} distritos`,
-        `MAE dep. 2024: ${m.mae_departamento}`,
-        `Clima: Open-Meteo + ICEN`,
-      ].map(t => `<span class="chip">${t}</span>`).join("");
+      document.getElementById("footer-note").textContent =
+        `${m.nota} Fuentes: ${m.fuente_casos}; ${m.fuente_clima}. Modelo: ${m.modelo}.`;
 
-      document.getElementById("kpis").innerHTML = [
-        ["MAE departamento", m.mae_departamento, "casos/mes (suma distritos)"],
-        ["RMSE departamento", m.rmse_departamento, "validación 2024"],
-        ["MAE por distrito", m.mae_distrito, "promedio mensual"],
-        ["Modelo", "HGB", "log1p(casos) + clima"],
-      ].map(([k,v,s]) => `<div class="kpi"><span>${k}</span><b>${v}</b><span>${s}</span></div>`).join("");
-
-      const h1 = Object.fromEntries(data.mapa_pronostico_h1.map(r => [r.ubigeo, r]));
-      const rows = data.resumen_distritos_2024.map(r => ({
-        ...r,
-        h1: h1[r.ubigeo]?.predicho ?? "—",
-        riesgo: h1[r.ubigeo]?.riesgo ?? "bajo",
-      }));
-
-      // Ranking → opens district chart
       const ranking = data.ranking_accion.slice(0, 15);
       document.getElementById("ranking-body").innerHTML = ranking.map((r, i) => `
         <tr class="clickable" data-ubigeo="${r.ubigeo}">
@@ -397,117 +595,230 @@
           <td><span class="badge ${r.riesgo}">${r.riesgo}</span></td>
         </tr>
       `).join("");
-      document.getElementById("ranking-body").addEventListener("click", (e) => {
+      document.getElementById("ranking-body").onclick = (e) => {
         const tr = e.target.closest("tr[data-ubigeo]");
-        if (tr) selectDistrict(tr.dataset.ubigeo, data, rows);
-      });
+        if (tr) selectDistrict(tr.dataset.ubigeo);
+      };
 
-      // Map
-      const map = L.map("map").setView([-6.55, -79.75], 9);
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "&copy; OpenStreetMap",
-        maxZoom: 14,
-      }).addTo(map);
-      data.mapa_pronostico_h1.forEach(p => {
-        const color = RISK_COLOR[p.riesgo] || "#666";
-        const radius = Math.max(7, Math.min(22, 6 + Math.sqrt(p.predicho) * 1.8));
-        L.circleMarker([p.lat, p.lon], {
-          radius,
-          color: "#fff",
-          weight: 1.5,
-          fillColor: color,
-          fillOpacity: 0.85,
-        }).addTo(map).bindPopup(
-          `<strong>${title(p.distrito)}</strong><br/>Provincia: ${title(p.provincia)}<br/>` +
-          `Predicción ${p.anio}-${String(p.mes).padStart(2,"0")}: <b>${p.predicho}</b> casos<br/>` +
-          `Riesgo: <b>${p.riesgo}</b>`
-        ).on("click", () => selectDistrict(p.ubigeo, data, rows));
-      });
+      if (!mapReady) {
+        const map = L.map("map").setView([-6.55, -79.75], 9);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "&copy; OpenStreetMap",
+          maxZoom: 14,
+        }).addTo(map);
+        data.mapa_pronostico_h1.forEach(p => {
+          const color = RISK_COLOR[p.riesgo] || "#666";
+          const radius = Math.max(7, Math.min(22, 6 + Math.sqrt(p.predicho) * 1.8));
+          L.circleMarker([p.lat, p.lon], {
+            radius,
+            color: "#fff",
+            weight: 1.5,
+            fillColor: color,
+            fillOpacity: 0.85,
+          }).addTo(map).bindPopup(
+            `<strong>${title(p.distrito)}</strong><br/>Provincia: ${title(p.provincia)}<br/>` +
+            `Predicción ${p.anio}-${String(p.mes).padStart(2,"0")}: <b>${p.predicho}</b> casos<br/>` +
+            `Riesgo: <b>${p.riesgo}</b>`
+          ).on("click", () => selectDistrict(p.ubigeo));
+        });
+        mapReady = true;
+      }
+    }
 
-      // Department chart
-      const dep = data.departamento_2024;
-      new Chart(document.getElementById("depChart"), {
+    function setYear(year) {
+      activeYear = String(year);
+      document.getElementById("yearSelect").value = activeYear;
+      const v = getValidation(activeYear);
+      const m = dashboardData.meta;
+      const h1 = Object.fromEntries(dashboardData.mapa_pronostico_h1.map(r => [r.ubigeo, r]));
+
+      document.getElementById("meta-chips").innerHTML = [
+        `Validación: ${activeYear}`,
+        `Último dato: ${m.ultimo_dato}`,
+        `Pronóstico: 2026–2027`,
+        `${v.n_distritos || m.n_distritos} distritos`,
+        `MAE dep. ${activeYear}: ${v.mae_departamento}`,
+        `Error anual: ${v.error_anual_pct ?? "—"}%`,
+      ].map(t => `<span class="chip">${t}</span>`).join("");
+
+      document.getElementById("kpis").innerHTML = [
+        ["MAE departamento", v.mae_departamento, `casos/mes · ${activeYear}`],
+        ["RMSE departamento", v.rmse_departamento, `validación ${activeYear}`],
+        ["MAE por distrito", v.mae_distrito, "promedio mensual"],
+        ["Error anual", `${v.error_anual_pct ?? "—"}%`, `${v.casos_anual_real ?? "—"} vs ${v.casos_anual_predicho ?? "—"}`],
+      ].map(([k,val,s]) => `<div class="kpi"><span>${k}</span><b>${val}</b><span>${s}</span></div>`).join("");
+
+      document.getElementById("depChartTitle").textContent = `Departamento ${activeYear}`;
+      document.getElementById("detailTitle").textContent = `Detalle por distrito · ${activeYear}`;
+      document.getElementById("districtHelp").textContent =
+        `Backtest ${activeYear} (línea continua) y pronóstico 2026–2027 (línea punteada).`;
+
+      activeRows = (v.resumen_distritos || []).map(r => {
+        const real = Number(r.casos_real) || 0;
+        const pred = Number(r.casos_pred) || 0;
+        const errorPct = real > 0
+          ? Math.abs(real - pred) / real * 100
+          : (pred > 0 ? 100 : 0);
+        return {
+          ...r,
+          error_anual_pct: Math.round(errorPct * 10) / 10,
+          h1: h1[r.ubigeo]?.predicho ?? "—",
+          riesgo: h1[r.ubigeo]?.riesgo ?? "bajo",
+        };
+      });
+      renderBestDistricts(activeRows);
+
+      if (depChart) depChart.destroy();
+      const dep = v.departamento || [];
+      depChart = new Chart(document.getElementById("depChart"), {
         type: "line",
         data: {
           labels: dep.map(d => d.mes),
           datasets: [
-            { label: "Real 2024", data: dep.map(d => d.real), borderColor: CHART_REAL, backgroundColor: "rgba(24,50,58,0.08)", tension: 0.25, pointRadius: 4, pointBackgroundColor: CHART_REAL },
+            { label: `Real ${activeYear}`, data: dep.map(d => d.real), borderColor: CHART_REAL, backgroundColor: "rgba(24,50,58,0.08)", tension: 0.25, pointRadius: 4, pointBackgroundColor: CHART_REAL },
             { label: "Predicho", data: dep.map(d => d.predicho), borderColor: CHART_PRED, backgroundColor: "rgba(58,168,160,0.12)", tension: 0.25, pointRadius: 4, pointBackgroundColor: CHART_PRED },
           ],
         },
         options: chartOptions("Mes"),
       });
 
-      // District selector + chart
       const distSel = document.getElementById("districtSelect");
-      rows.forEach(r => {
+      const prev = selectedUbigeo;
+      distSel.innerHTML = "";
+      activeRows.forEach(r => {
         const opt = document.createElement("option");
         opt.value = r.ubigeo;
         opt.textContent = `${title(r.distrito)} (${title(r.provincia)})`;
         distSel.appendChild(opt);
       });
-      distSel.addEventListener("change", () => selectDistrict(distSel.value, data, rows));
-      selectDistrict(rows[0]?.ubigeo, data, rows);
+      distSel.onchange = () => selectDistrict(distSel.value);
 
-      // Detail table
       const provSel = document.getElementById("provFilter");
-      [...new Set(rows.map(r => r.provincia))].sort().forEach(p => {
+      const keepProv = provSel.value;
+      provSel.innerHTML = `<option value="">Todas las provincias</option>`;
+      [...new Set(activeRows.map(r => r.provincia))].sort().forEach(p => {
         const opt = document.createElement("option");
         opt.value = p; opt.textContent = title(p);
         provSel.appendChild(opt);
       });
+      if ([...provSel.options].some(o => o.value === keepProv)) provSel.value = keepProv;
 
       const tbody = document.getElementById("detail-body");
-      function paint() {
-        const q = document.getElementById("search").value.trim().toLowerCase();
-        const prov = provSel.value;
-        const filtered = rows.filter(r =>
-          (!prov || r.provincia === prov) &&
-          (!q || r.distrito.toLowerCase().includes(q))
-        );
-        tbody.innerHTML = filtered.map(r => `
-          <tr class="clickable ${r.ubigeo === selectedUbigeo ? "selected" : ""}" data-ubigeo="${r.ubigeo}">
-            <td>${title(r.distrito)}</td>
-            <td>${title(r.provincia)}</td>
-            <td>${r.casos_real}</td>
-            <td>${r.casos_pred}</td>
-            <td>${r.mae}</td>
-            <td>${r.h1}</td>
-            <td><span class="badge ${r.riesgo}">${r.riesgo}</span></td>
-          </tr>
-        `).join("");
-      }
-      tbody.addEventListener("click", (e) => {
+      tbody.onclick = (e) => {
         const tr = e.target.closest("tr[data-ubigeo]");
         if (tr) {
-          selectDistrict(tr.dataset.ubigeo, data, rows);
-          paint();
+          selectDistrict(tr.dataset.ubigeo);
+          paintDetail();
         }
-      });
-      provSel.addEventListener("change", paint);
-      document.getElementById("search").addEventListener("input", paint);
-      paint();
+      };
+      document.getElementById("provFilter").onchange = paintDetail;
+      document.getElementById("search").oninput = paintDetail;
+      paintDetail();
 
-      document.getElementById("footer-note").textContent =
-        `${m.nota} Fuentes: ${m.fuente_casos}; ${m.fuente_clima}. Modelo: ${m.modelo}.`;
+      const pick = activeRows.some(r => r.ubigeo === prev) ? prev : activeRows[0]?.ubigeo;
+      selectDistrict(pick);
     }
 
-    function selectDistrict(ubigeo, data, rows) {
-      if (!ubigeo) return;
+    function pctClass(p) {
+      if (p <= 10) return "pct-good";
+      if (p <= 40) return "pct-mid";
+      return "pct-bad";
+    }
+
+    function renderBestDistricts(rows) {
+      const ranked = rows
+        .filter(r => Number(r.casos_real) >= MIN_CASES_PCT)
+        .slice()
+        .sort((a, b) => a.error_anual_pct - b.error_anual_pct);
+      const hero = document.getElementById("best-hero");
+      const body = document.getElementById("best-body");
+
+      if (!ranked.length) {
+        hero.innerHTML = `
+          <div>
+            <p class="label">Menor error · ${activeYear}</p>
+            <p class="district-name">Sin datos suficientes</p>
+          </div>
+          <div>
+            <p class="pct">—</p>
+            <p class="detail">Ningún distrito alcanzó ${MIN_CASES_PCT} casos anuales en ${activeYear}.</p>
+          </div>
+        `;
+        body.innerHTML = "";
+        return;
+      }
+
+      const best = ranked[0];
+      hero.innerHTML = `
+        <div>
+          <p class="label">Menor error · ${activeYear}</p>
+          <p class="district-name">${title(best.distrito)}</p>
+        </div>
+        <div>
+          <p class="pct">${best.error_anual_pct.toFixed(1)}%</p>
+          <p class="detail">
+            ${title(best.provincia)} · ${best.casos_real} reales vs ${best.casos_pred} predichos · MAE ${best.mae}
+          </p>
+        </div>
+      `;
+      hero.onclick = () => selectDistrict(best.ubigeo);
+      hero.style.cursor = "pointer";
+
+      body.innerHTML = ranked.slice(0, 8).map((r, i) => `
+        <tr class="clickable" data-ubigeo="${r.ubigeo}">
+          <td>${i + 1}</td>
+          <td>${title(r.distrito)}<div style="color:var(--muted);font-size:0.8rem">${title(r.provincia)}</div></td>
+          <td>${r.casos_real}</td>
+          <td>${r.casos_pred}</td>
+          <td class="${pctClass(r.error_anual_pct)}">${r.error_anual_pct.toFixed(1)}%</td>
+        </tr>
+      `).join("");
+      body.onclick = (e) => {
+        const tr = e.target.closest("tr[data-ubigeo]");
+        if (tr) selectDistrict(tr.dataset.ubigeo);
+      };
+    }
+
+    function paintDetail() {
+      const q = document.getElementById("search").value.trim().toLowerCase();
+      const prov = document.getElementById("provFilter").value;
+      const filtered = activeRows.filter(r =>
+        (!prov || r.provincia === prov) &&
+        (!q || r.distrito.toLowerCase().includes(q))
+      );
+      document.getElementById("detail-body").innerHTML = filtered.map(r => `
+        <tr class="clickable ${r.ubigeo === selectedUbigeo ? "selected" : ""}" data-ubigeo="${r.ubigeo}">
+          <td>${title(r.distrito)}</td>
+          <td>${title(r.provincia)}</td>
+          <td>${r.casos_real}</td>
+          <td>${r.casos_pred}</td>
+          <td class="${pctClass(r.error_anual_pct)}">${Number(r.error_anual_pct).toFixed(1)}%</td>
+          <td>${r.mae}</td>
+          <td>${r.h1}</td>
+          <td><span class="badge ${r.riesgo}">${r.riesgo}</span></td>
+        </tr>
+      `).join("");
+    }
+
+    function selectDistrict(ubigeo) {
+      if (!ubigeo || !dashboardData) return;
       selectedUbigeo = ubigeo;
       const distSel = document.getElementById("districtSelect");
       if (distSel.value !== ubigeo) distSel.value = ubigeo;
 
-      const backtest = data.backtest_distritos
+      const v = getValidation(activeYear);
+      const backtest = (v.backtest_distritos || [])
         .filter(r => r.ubigeo === ubigeo)
         .sort((a, b) => a.mes - b.mes);
-      const forecast = (data.pronostico || [])
+      // Show only first 12 forecast months on the district chart to keep it readable
+      const forecast = (dashboardData.pronostico || [])
         .filter(r => r.ubigeo === ubigeo)
-        .sort((a, b) => a.horizonte - b.horizonte);
+        .sort((a, b) => a.horizonte - b.horizonte)
+        .slice(0, 12);
 
       const labels = [
-        ...backtest.map(r => `${r.mes}`),
-        ...forecast.map(r => `${r.mes} (h+${r.horizonte})`),
+        ...backtest.map(r => `${activeYear}-${String(r.mes).padStart(2,"0")}`),
+        ...forecast.map(r => `${r.anio}-${String(r.mes).padStart(2,"0")}`),
       ];
       const observed = [
         ...backtest.map(r => r.casos),
@@ -518,7 +829,7 @@
         ...forecast.map(r => r.predicho),
       ];
 
-      const meta = rows.find(r => r.ubigeo === ubigeo);
+      const meta = activeRows.find(r => r.ubigeo === ubigeo);
       if (districtChart) districtChart.destroy();
       districtChart = new Chart(document.getElementById("districtChart"), {
         type: "line",
@@ -526,7 +837,7 @@
           labels,
           datasets: [
             {
-              label: "Real",
+              label: `Real ${activeYear}`,
               data: observed,
               borderColor: CHART_REAL,
               backgroundColor: "rgba(24,50,58,0.08)",
@@ -551,13 +862,13 @@
           ],
         },
         options: {
-          ...chartOptions("Mes"),
+          ...chartOptions("Periodo"),
           plugins: {
             legend: { position: "bottom" },
             title: {
               display: !!meta,
               text: meta
-                ? `${title(meta.distrito)} · MAE ${meta.mae} · riesgo ${meta.riesgo}`
+                ? `${title(meta.distrito)} · ${activeYear} · MAE ${meta.mae} · riesgo ${meta.riesgo}`
                 : "",
               color: "#5a6760",
               font: { size: 12, weight: "500" },
@@ -566,9 +877,7 @@
         },
       });
 
-      document.querySelectorAll("#detail-body tr").forEach(tr => {
-        tr.classList.toggle("selected", tr.dataset.ubigeo === ubigeo);
-      });
+      paintDetail();
     }
 
     function chartOptions(xTitle) {
