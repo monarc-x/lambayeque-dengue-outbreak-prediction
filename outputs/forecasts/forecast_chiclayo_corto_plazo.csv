@@ -1,0 +1,4 @@
+ubigeo,distrito,provincia,lat,lon,anio,mes,predicho,horizonte,riesgo
+140101,CHICLAYO,CHICLAYO,-6.7714,-79.8409,2026,1,0.6,1,bajo
+140101,CHICLAYO,CHICLAYO,-6.7714,-79.8409,2026,2,1.1,2,bajo
+140101,CHICLAYO,CHICLAYO,-6.7714,-79.8409,2026,3,2.5,3,bajo

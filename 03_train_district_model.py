@@ -1,6 +1,8 @@
-"""Train a district-level dengue model, evaluate on 2025, and forecast 2026–2027.
+"""Train on all districts; validate and forecast Chiclayo only.
 
 Model: HistGradientBoostingRegressor on log1p(cases), district panel.
+Validation: train on years < TEST_YEAR (2015–2023), evaluate Chiclayo in 2024.
+Forecast: refit on every year through 2025, then forecast 1–3 months ahead.
 Climate: Open-Meteo nodes + coastal El Niño index (ICEN / ENFEN).
 """
 
@@ -17,17 +19,16 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 BASE = Path(__file__).resolve().parent
 DATA = BASE / "data" / "lambayeque_districts_climate.csv"
-MODEL = BASE / "models" / "modelo_dengue_distritos.pkl"
-META = BASE / "models" / "modelo_meta.json"
-OUT_JSON = BASE / "web" / "data" / "dashboard.json"
+MODEL = BASE / "models" / "modelo_dengue_chiclayo.pkl"
+META = BASE / "models" / "modelo_meta_chiclayo.json"
+OUT_JSON = BASE / "web" / "data" / "dashboard_corto_plazo.json"
 OUT_DIR = BASE / "outputs" / "forecasts"
-OUT_BACKTEST = OUT_DIR / "backtest_distritos_2025.csv"
-OUT_FORECAST = OUT_DIR / "forecast_distritos_2026_2027.csv"
-OUT_DEP = OUT_DIR / "backtest_departamento_2025.csv"
-OUT_FORECAST_DEP = OUT_DIR / "forecast_departamento_2026_2027.csv"
+OUT_FORECAST = OUT_DIR / "forecast_chiclayo_corto_plazo.csv"
 
-TEST_YEAR = 2025
-HORIZON = 24
+TEST_YEAR = 2024
+HORIZON = 3  # operational short horizon (1–3 months)
+TARGET_UBIGEO = "140101"  # Chiclayo
+TARGET_NAME = "CHICLAYO"
 
 FEATURE_COLS = [
     "mes", "mes_sin", "mes_cos",
@@ -201,9 +202,19 @@ def fit_model(train: pd.DataFrame) -> HistGradientBoostingRegressor:
     return model
 
 
-def pack_backtest(comparison: pd.DataFrame, metrics: dict[str, float], year: int) -> dict:
+def evaluate_target(comparison: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, float]]:
+    """Keep focus-district rows and compute district-only metrics."""
+    target = comparison[comparison["ubigeo"] == TARGET_UBIGEO].copy()
+    if target.empty:
+        raise ValueError(f"No backtest rows for {TARGET_NAME} ({TARGET_UBIGEO})")
+    mae = mean_absolute_error(target["casos"], target["predicho"])
+    rmse = float(np.sqrt(mean_squared_error(target["casos"], target["predicho"])))
+    return target, {"mae": mae, "rmse": rmse}
+
+
+def pack_backtest(target: pd.DataFrame, metrics: dict[str, float], year: int) -> dict:
     top_mae = (
-        comparison.assign(abs_err=lambda x: x["error"].abs())
+        target.assign(abs_err=lambda x: x["error"].abs())
         .groupby(["ubigeo", "distrito", "provincia"], as_index=False)
         .agg(
             casos_real=("casos", "sum"),
@@ -212,26 +223,79 @@ def pack_backtest(comparison: pd.DataFrame, metrics: dict[str, float], year: int
         )
         .sort_values("casos_real", ascending=False)
     )
-    dep_series = (
-        comparison.groupby("mes", as_index=False)
+    series = (
+        target.groupby("mes", as_index=False)
         .agg(real=("casos", "sum"), predicho=("predicho", "sum"))
     )
-    annual_real = float(comparison["casos"].sum())
-    annual_pred = float(comparison["predicho"].sum())
+    series["error_pct"] = (
+        (series["real"] - series["predicho"]).abs() / series["real"].clip(lower=1) * 100
+    ).round(1)
+    annual_real = float(target["casos"].sum())
+    annual_pred = float(target["predicho"].sum())
     annual_pct = abs(annual_real - annual_pred) / max(annual_real, 1.0) * 100
+    # WAPE: monthly errors are summed in absolute value, so months cannot offset each other
+    monthly_pct = (series["real"] - series["predicho"]).abs().sum() / max(annual_real, 1.0) * 100
     return {
         "anio": year,
+        "foco": TARGET_NAME,
+        "ubigeo": TARGET_UBIGEO,
         "mae_distrito": round(metrics["mae"], 2),
         "rmse_distrito": round(metrics["rmse"], 2),
-        "mae_departamento": round(metrics["mae_dep"], 2),
-        "rmse_departamento": round(metrics["rmse_dep"], 2),
+        # Kept for dashboard KPI compatibility (focus-district monthly series)
+        "mae_departamento": round(metrics["mae"], 2),
+        "rmse_departamento": round(metrics["rmse"], 2),
         "casos_anual_real": round(annual_real, 1),
         "casos_anual_predicho": round(annual_pred, 1),
         "error_anual_pct": round(annual_pct, 2),
-        "n_distritos": int(comparison["ubigeo"].nunique()),
-        "departamento": dep_series.to_dict(orient="records"),
-        "backtest_distritos": comparison.to_dict(orient="records"),
+        "error_mensual_pct": round(monthly_pct, 1),
+        "n_distritos": 1,
+        "departamento": series.to_dict(orient="records"),
+        "backtest_distritos": target.to_dict(orient="records"),
         "resumen_distritos": top_mae.round(2).to_dict(orient="records"),
+    }
+
+
+def rolling_validation(
+    model: HistGradientBoostingRegressor,
+    raw: pd.DataFrame,
+    cat_maps: dict,
+    year: int,
+) -> dict:
+    """Forecast h=1..HORIZON from each origin in `year` using only data up to the origin."""
+    key = raw["anio"] * 100 + raw["mes"]
+    origins = [(year - 1, 12)] + [(year, m) for m in range(1, 13 - HORIZON)]
+    actual = raw.set_index(["ubigeo", "anio", "mes"])["casos"]
+
+    rows = []
+    for oy, om in origins:
+        work = raw[key <= oy * 100 + om].copy()
+        fc = recursive_forecast(model, work, cat_maps, oy, om)
+        fc = fc[fc["ubigeo"] == TARGET_UBIGEO].copy()
+        fc["real"] = [actual.get((u, a, m), np.nan) for u, a, m in zip(fc["ubigeo"], fc["anio"], fc["mes"])]
+        fc["origen"] = f"{oy}-{om:02d}"
+        rows.append(fc)
+    res = pd.concat(rows, ignore_index=True)
+    res["abs_err"] = (res["real"] - res["predicho"]).abs()
+
+    by_h = (
+        res.groupby("horizonte", as_index=False)["abs_err"].mean()
+        .rename(columns={"abs_err": "mae"})
+    )
+    windows = (
+        res.groupby("origen", as_index=False)
+        .agg(real=("real", "sum"), predicho=("predicho", "sum"))
+    )
+    windows["error"] = windows["real"] - windows["predicho"]
+    real_total = float(windows["real"].sum())
+    pred_total = float(windows["predicho"].sum())
+    return {
+        "horizonte_meses": HORIZON,
+        "mae_por_horizonte": by_h.round(2).to_dict(orient="records"),
+        "ventanas": windows.round(1).to_dict(orient="records"),
+        "real_acumulado": round(real_total, 1),
+        "predicho_acumulado": round(pred_total, 1),
+        "error_acumulado_pct": round(abs(real_total - pred_total) / max(real_total, 1.0) * 100, 1),
+        "detalle": res[["origen", "horizonte", "anio", "mes", "real", "predicho"]].round(1).to_dict(orient="records"),
     }
 
 
@@ -273,95 +337,119 @@ def main() -> None:
     model_df = raw.dropna(subset=FEATURE_COLS).reset_index(drop=True)
     model_df["y"] = np.log1p(model_df["casos"])
 
-    BACKTEST_YEARS = (2024, 2025)
+    # Train on ALL districts; report / forecast ONLY Chiclayo (short horizon)
+    BACKTEST_YEARS = (TEST_YEAR,)
     validaciones: dict[str, dict] = {}
-    last_model = None
-    last_comparison = None
+    last_target = None
     OUT_DIR.mkdir(parents=True, exist_ok=True)
 
     for year in BACKTEST_YEARS:
         train = model_df[model_df["anio"] < year]
         test = model_df[model_df["anio"] == year]
-        print(f"\n=== Train < {year} | Test {year}: {len(train)} / {len(test)} ===")
+        print(
+            f"\n=== Train ALL districts < {year} ({len(train)} rows) | "
+            f"Validate {TARGET_NAME} {year} ==="
+        )
         model = fit_model(train)
-        comparison, metrics = evaluate_backtest(model, test)
-        pack = pack_backtest(comparison, metrics, year)
+        comparison, _ = evaluate_backtest(model, test)
+        target, metrics = evaluate_target(comparison)
+        pack = pack_backtest(target, metrics, year)
         validaciones[str(year)] = pack
         print(
-            f"MAE dist {pack['mae_distrito']} | MAE dep {pack['mae_departamento']} | "
+            f"{TARGET_NAME} MAE {pack['mae_distrito']} | "
             f"annual {pack['casos_anual_real']:.0f} vs {pack['casos_anual_predicho']:.1f} "
             f"({pack['error_anual_pct']:.1f}%)"
         )
-        last_model = model
-        last_comparison = comparison
-        comparison.to_csv(OUT_DIR / f"backtest_distritos_{year}.csv", index=False)
-        (
-            comparison.groupby(["anio", "mes"], as_index=False)
-            .agg(real=("casos", "sum"), predicho=("predicho", "sum"))
-            .to_csv(OUT_DIR / f"backtest_departamento_{year}.csv", index=False)
+        rolling = rolling_validation(model, raw, cat_maps, year)
+        pack["rolling"] = rolling
+        print(
+            f"Rolling h=1..{HORIZON}: MAE "
+            + ", ".join(f"h{r['horizonte']}={r['mae']}" for r in rolling["mae_por_horizonte"])
+            + f" | acumulado {rolling['real_acumulado']:.0f} vs {rolling['predicho_acumulado']:.1f}"
+            f" ({rolling['error_acumulado_pct']:.1f}%)"
+        )
+        last_target = target
+        target.to_csv(OUT_DIR / f"backtest_chiclayo_{year}.csv", index=False)
+        pd.DataFrame(rolling["detalle"]).to_csv(
+            OUT_DIR / f"rolling_chiclayo_{year}.csv", index=False
         )
 
-    assert last_model is not None and last_comparison is not None
-
-    BASE.joinpath("models").mkdir(parents=True, exist_ok=True)
-    joblib.dump(
-        {"model": last_model, "features": FEATURE_COLS, "cat_maps": cat_maps},
-        MODEL,
-    )
-    print(f"\nModel (trained through {TEST_YEAR - 1}): {MODEL}")
+    assert last_target is not None
 
     work = raw.sort_values(["ubigeo", "anio", "mes"]).copy()
     last_year = int(work["anio"].max())
     last_month = int(work.loc[work["anio"] == last_year, "mes"].max())
-    print(f"Forecast origin: {last_year}-{last_month:02d} | horizon: {HORIZON} months")
 
-    forecast = recursive_forecast(last_model, work, cat_maps, last_year, last_month)
+    # After validation, refit on every available year for the operational forecast
+    final_model = fit_model(model_df[model_df["anio"] <= last_year])
+    BASE.joinpath("models").mkdir(parents=True, exist_ok=True)
+    joblib.dump(
+        {
+            "model": final_model,
+            "features": FEATURE_COLS,
+            "cat_maps": cat_maps,
+            "target_ubigeo": TARGET_UBIGEO,
+            "target_name": TARGET_NAME,
+            "horizonte_meses": HORIZON,
+        },
+        MODEL,
+    )
+    print(f"\nFinal model (all districts through {last_year}): {MODEL}")
+    print(f"Forecast origin: {last_year}-{last_month:02d} | short horizon: {HORIZON} months")
+
+    # Recursive forecast on full panel, then keep Chiclayo only (h+1..h+3).
+    forecast = recursive_forecast(final_model, work, cat_maps, last_year, last_month)
     hist = work.groupby("ubigeo")["casos"]
     p66 = hist.quantile(0.66).to_dict()
     p90 = hist.quantile(0.90).to_dict()
-    forecast_out, h1, ranking = build_forecast_block(forecast, p66, p90)
+    forecast_all, h1_all, ranking_all = build_forecast_block(forecast, p66, p90)
+    forecast_out = forecast_all[forecast_all["ubigeo"] == TARGET_UBIGEO].copy()
+    h1 = h1_all[h1_all["ubigeo"] == TARGET_UBIGEO].copy()
+    ranking = ranking_all[ranking_all["ubigeo"] == TARGET_UBIGEO].copy()
 
     forecast_out.to_csv(OUT_FORECAST, index=False)
-    (
-        forecast_out.groupby(["anio", "mes"], as_index=False)
-        .agg(predicho=("predicho", "sum"))
-        .sort_values(["anio", "mes"])
-        .to_csv(OUT_FORECAST_DEP, index=False)
-    )
-    print("\n=== Forecast totals by year ===")
+    print(f"\n=== {TARGET_NAME} short-horizon forecast ===")
     print(
-        forecast_out.groupby("anio")["predicho"].sum().round(1).to_string()
+        forecast_out[["horizonte", "anio", "mes", "predicho", "riesgo"]]
+        .sort_values("horizonte")
+        .to_string(index=False)
     )
 
-    # Default view = latest backtest year; keep legacy keys for older markup
     latest = validaciones[str(TEST_YEAR)]
+    short_total = float(forecast_out["predicho"].sum())
     payload = {
         "meta": {
-            "titulo": "Vigilancia predictiva de dengue — Lambayeque",
+            "titulo": f"Vigilancia predictiva de dengue — {TARGET_NAME.title()}",
+            "foco": TARGET_NAME,
+            "ubigeo": TARGET_UBIGEO,
             "anio_test": TEST_YEAR,
             "anios_validacion": list(BACKTEST_YEARS),
             "horizonte_meses": HORIZON,
+            "producto": "pronostico_corto_plazo",
             "ultimo_dato": f"{last_year}-{last_month:02d}",
             "fuente_casos": "CDC/MINSA datos abiertos vigilancia dengue",
             "fuente_clima": "Open-Meteo Archive API + ICEN (ENFEN)",
-            "modelo": "HistGradientBoostingRegressor (log1p casos) por panel distrital",
+            "modelo": (
+                "HistGradientBoostingRegressor (log1p casos); "
+                f"validado con todos los distritos 2015–{TEST_YEAR - 1} contra {TEST_YEAR}; "
+                f"reentrenado 2015–{last_year} para el pronóstico 1–{HORIZON} meses de {TARGET_NAME}"
+            ),
             "mae_distrito": latest["mae_distrito"],
             "rmse_distrito": latest["rmse_distrito"],
             "mae_departamento": latest["mae_departamento"],
             "rmse_departamento": latest["rmse_departamento"],
-            "n_distritos": latest["n_distritos"],
+            "casos_corto_plazo": round(short_total, 1),
+            "n_distritos": 1,
             "nota": (
-                "Backtests 2024 and 2025 = one-month-ahead with observed lags "
-                "(each year trained only on prior years). "
-                "Forecast 2026–2027 uses month climatology and recursive predicted cases."
+                f"Validación: entrenado con los 37 distritos de Lambayeque (años < {TEST_YEAR}), "
+                f"evaluado solo en {TARGET_NAME} {TEST_YEAR}. "
+                f"Pronóstico: modelo reentrenado hasta {last_year}, horizonte de {HORIZON} meses (no total anual)."
             ),
         },
         "validaciones": validaciones,
         "departamento_backtest": latest["departamento"],
-        "departamento_2024": validaciones["2024"]["departamento"],
         "backtest_distritos": latest["backtest_distritos"],
         "resumen_distritos_backtest": latest["resumen_distritos"],
-        "resumen_distritos_2024": validaciones["2024"]["resumen_distritos"],
         "pronostico": forecast_out.to_dict(orient="records"),
         "ranking_accion": ranking.round(2).to_dict(orient="records"),
         "mapa_pronostico_h1": h1[

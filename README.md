@@ -1,6 +1,28 @@
 # Dengue prediction for Lambayeque (Peru)
 
-Research pipeline to estimate **monthly dengue cases by district** in Lambayeque and present results in a local decision-support dashboard.
+Repository: [github.com/monarc-x/lambayeque-dengue-outbreak-prediction](https://github.com/monarc-x/lambayeque-dengue-outbreak-prediction)
+
+Research project *"Modelo de machine learning para el pronóstico anual de dengue asociado a El Niño costero en José Leonardo Ortiz, Lambayeque"*. The main pipeline estimates **annual dengue cases** in José Leonardo Ortiz (ubigeo 140105) with a model trained on 212 coastal districts and the coastal El Niño index (ICEN), and presents the 2024 validation and the 2026–2027 forecast in a decision-support dashboard.
+
+## Main result (annual El Niño model)
+
+```powershell
+py -3.12 01_prepare_data.py           # district coordinates used by the dashboard map
+py -3.12 05_annual_elnino_model.py    # train, validate 2024, forecast 2026–2027
+py -3.12 04_serve_dashboard.py        # open the dashboard
+```
+
+- **Unit of analysis:** district–year, 2000–2025 (Tumbes, Piura, Lambayeque, La Libertad, Áncash, Ica)
+- **Algorithm:** `HistGradientBoostingRegressor` with Poisson loss and monotonic constraints
+- **Features:** max ICEN Jan–May, mean ICEN Jun–Aug of the previous year, log cases two and three years before, historical endemicity
+- **Validation 2024 (trained 2003–2023):** 736 real vs 866 predicted cases, 17.6 % error
+- **Forecast:** 2026 = 350 cases (observed ICEN), 2027 = 1,291 cases (ENFEN extraordinary El Niño scenario)
+- **Outputs:** `web/data/dashboard.json`, `models/modelo_anual_elnino.pkl`, `outputs/forecasts/validacion_anual_jose_leonardo_ortiz.csv`
+- **District dataset:** `data/jlo/` (individual, monthly and annual cases of José Leonardo Ortiz)
+
+Report helpers: `scripts/export_formulas.py` (equation images in `outputs/formulas/`), `scripts/add_cronograma_docx.py` and `scripts/add_resultados_docx.py` (schedule and results sections of the report).
+
+The sections below describe the earlier monthly district model (`02`–`03`), kept for reference.
 
 ## Requirements
 

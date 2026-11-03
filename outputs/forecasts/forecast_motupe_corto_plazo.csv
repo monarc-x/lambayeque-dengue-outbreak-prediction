@@ -1,0 +1,4 @@
+ubigeo,distrito,provincia,lat,lon,anio,mes,predicho,horizonte,riesgo
+140307,MOTUPE,LAMBAYEQUE,-6.153,-79.714,2026,1,0.2,1,bajo
+140307,MOTUPE,LAMBAYEQUE,-6.153,-79.714,2026,2,0.4,2,bajo
+140307,MOTUPE,LAMBAYEQUE,-6.153,-79.714,2026,3,0.4,3,bajo

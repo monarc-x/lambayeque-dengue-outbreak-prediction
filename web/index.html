@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Dengue Lambayeque — Panel para autoridades</title>
+  <title>Dengue José Leonardo Ortiz — Pronóstico anual con El Niño</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
@@ -80,7 +80,7 @@
       display: flex;
       flex-direction: column;
       align-items: stretch;
-      gap: 0.7rem;
+      gap: 0.65rem;
       background: var(--panel);
       border: 1px solid rgba(255,255,255,0.8);
       border-radius: 18px;
@@ -94,16 +94,36 @@
       letter-spacing: 0.06em;
       color: var(--accent-deep);
     }
-    .year-row {
-      display: flex;
-      gap: 0.55rem;
-      align-items: center;
+    .mode-switch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.35rem;
+      padding: 0.28rem;
+      background: #e8f3f2;
+      border-radius: 14px;
     }
-    .year-row select {
-      flex: 1;
+    .mode-switch button {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
       font-weight: 700;
-      font-size: 1.05rem;
+      font-size: 0.9rem;
+      padding: 0.65rem 0.55rem;
+      border-radius: 11px;
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
     }
+    .mode-switch button.active {
+      background: #fff;
+      color: var(--ink);
+      box-shadow: 0 4px 14px rgba(24, 50, 58, 0.1);
+    }
+    .view-panel {
+      display: grid;
+      gap: calc(var(--gap) * 1.25);
+    }
+    .view-panel[hidden] { display: none !important; }
     .meta-row {
       display: flex;
       flex-wrap: wrap;
@@ -123,14 +143,14 @@
     main {
       width: var(--shell);
       margin: 0 auto;
-      padding: 0 0 2.75rem;
+      padding: 0.25rem 0 2.75rem;
       display: grid;
-      gap: var(--gap);
+      gap: calc(var(--gap) * 1.25);
     }
     .kpis {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: var(--gap);
+      gap: calc(var(--gap) * 1.25);
     }
     .kpi {
       position: relative;
@@ -164,7 +184,7 @@
     .spotlight {
       display: grid;
       grid-template-columns: minmax(280px, 0.85fr) minmax(0, 1.35fr);
-      gap: var(--gap);
+      gap: calc(var(--gap) * 1.25);
       align-items: stretch;
     }
     .best-hero {
@@ -173,13 +193,14 @@
         linear-gradient(160deg, rgba(31,122,116,0.92) 0%, rgba(58,168,160,0.88) 55%, rgba(234,140,93,0.75) 100%);
       border: none;
       border-radius: 20px;
-      padding: 1.35rem 1.4rem 1.45rem;
+      padding: 1.6rem 1.7rem 1.7rem;
       box-shadow: 0 16px 36px rgba(31, 122, 116, 0.22);
       color: #fff;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      min-height: 220px;
+      gap: 1.5rem;
+      min-height: 260px;
     }
     .best-hero .label {
       color: rgba(255,255,255,0.82);
@@ -213,6 +234,20 @@
       line-height: 1.4;
       max-width: 22rem;
     }
+    .best-hero .unit {
+      font-size: 0.42em;
+      font-weight: 700;
+      margin-left: 0.35rem;
+      letter-spacing: 0;
+    }
+    tr.highlight td { background: var(--accent-soft); font-weight: 700; }
+    .detail-table th {
+      position: static;
+      width: 42%;
+      background: transparent;
+      padding: 0.7rem 0.4rem;
+    }
+    .detail-table td { padding: 0.7rem 0.4rem; font-weight: 600; }
     .best-table-card {
       display: flex;
       flex-direction: column;
@@ -241,7 +276,7 @@
       backdrop-filter: blur(12px);
       border: 1px solid rgba(255, 255, 255, 0.75);
       border-radius: 18px;
-      padding: 1.05rem 1.15rem 1.15rem;
+      padding: 1.35rem 1.5rem 1.5rem;
       box-shadow: var(--shadow);
       min-width: 0;
     }
@@ -398,16 +433,17 @@
 <body>
   <header class="top">
     <div>
-      <h1 class="brand">Dengue Lambayeque</h1>
+      <h1 class="brand">Dengue José Leonardo Ortiz</h1>
       <p class="lead">
-        Panel de predicción por distrito para priorizar vigilancia y control.
-        Casos CDC + clima Open-Meteo + ICEN.
+        Pronóstico anual de casos según El Niño costero (ICEN), con datos de los distritos de la costa
+        norte y centro. Validado contra 2024 (entrenado 2003–2023).
       </p>
     </div>
     <div class="header-controls">
-      <label for="yearSelect">Año de validación</label>
-      <div class="year-row">
-        <select id="yearSelect" aria-label="Elegir año de validación"></select>
+      <label id="modeLabel">Vista</label>
+      <div class="mode-switch" role="tablist" aria-labelledby="modeLabel">
+        <button type="button" id="modeForecast" class="active" role="tab" aria-selected="true">Pronóstico 2026–2027</button>
+        <button type="button" id="modeValidation" role="tab" aria-selected="false">Validación 2024</button>
       </div>
     </div>
     <div class="meta-row" id="meta-chips"></div>
@@ -416,106 +452,49 @@
   <main>
     <div class="kpis" id="kpis"></div>
 
-    <div class="spotlight" id="best-section">
-      <div class="best-hero" id="best-hero">
-        <div>
-          <p class="label" id="bestTitle">Menor error por distrito</p>
-          <p class="district-name">—</p>
-        </div>
-        <div>
-          <p class="pct">—</p>
-          <p class="detail">Seleccione un año de validación.</p>
-        </div>
-      </div>
-      <section class="card best-table-card">
-        <div class="section-head">
-          <div>
-            <h2>Ranking de mejor ajuste</h2>
-            <p class="help" id="bestHelp">
-              Error anual |real − predicho| / real. Solo distritos con ≥10 casos (porcentaje interpretable).
-            </p>
+    <div class="view-panel" id="view-forecast">
+      <div class="spotlight">
+        <div class="best-hero" id="forecast-hero"></div>
+        <section class="card best-table-card">
+          <h2>Pronóstico anual</h2>
+          <p class="help">
+            2026 usa el ICEN ya observado (ene–may). 2027 usa el pronóstico de ENFEN:
+            El Niño costero de magnitud extraordinaria hasta febrero de 2027.
+          </p>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr><th>Año</th><th>ICEN</th><th>ICEN máx. ene–may</th><th>Casos estimados</th><th>Riesgo</th></tr>
+              </thead>
+              <tbody id="scenario-body"></tbody>
+            </table>
           </div>
-        </div>
-        <div class="table-scroll">
-          <table>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Distrito</th>
-                <th>Casos real</th>
-                <th>Predicho</th>
-                <th>Error %</th>
-              </tr>
-            </thead>
-            <tbody id="best-body"></tbody>
-          </table>
-        </div>
-      </section>
-    </div>
-
-    <div class="ops-row">
+        </section>
+      </div>
       <section class="card">
-        <h2>Mapa de riesgo (próximo mes)</h2>
-        <p class="help">Color según percentil histórico de cada distrito. Clic en un punto para detalle.</p>
+        <h2>Ubicación y riesgo 2027</h2>
+        <p class="help">Color según el riesgo estimado para 2027 frente al historial del distrito.</p>
         <div id="map"></div>
       </section>
-      <section class="card">
-        <h2>Prioridad de acción</h2>
-        <p class="help">Mayor predicción promedio a 3 meses.</p>
-        <div class="side-scroll">
-          <table>
-            <thead>
-              <tr><th>#</th><th>Distrito</th><th>Pred.</th><th>Riesgo</th></tr>
-            </thead>
-            <tbody id="ranking-body"></tbody>
+    </div>
+
+    <div class="view-panel" id="view-validation" hidden>
+      <div class="spotlight">
+        <div class="best-hero" id="validation-hero"></div>
+        <section class="card best-table-card">
+          <h2 id="validation-title">Detalle de la validación</h2>
+          <p class="help">El año validado no se usó para entrenar: el modelo lo pronosticó sin ver sus casos.</p>
+          <table class="detail-table">
+            <tbody id="validation-body"></tbody>
           </table>
-        </div>
+        </section>
+      </div>
+      <section class="card">
+        <h2 id="validation-chart-title">Real vs predicho</h2>
+        <p class="help">Casos anuales del distrito en el año de validación.</p>
+        <div class="chart-wrap"><canvas id="validationChart"></canvas></div>
       </section>
     </div>
-
-    <div class="chart-grid">
-      <section class="card">
-        <h2 id="depChartTitle">Departamento</h2>
-        <p class="help">Suma de predicciones distritales frente a casos observados del año elegido.</p>
-        <div class="chart-wrap"><canvas id="depChart"></canvas></div>
-      </section>
-      <section class="card">
-        <div class="district-chart-head">
-          <div>
-            <h2 style="margin:0 0 0.35rem">Por distrito</h2>
-            <p class="help" id="districtHelp">Backtest del año elegido y pronóstico 2026–2027.</p>
-          </div>
-          <select id="districtSelect" aria-label="Elegir distrito"></select>
-        </div>
-        <div class="chart-wrap"><canvas id="districtChart"></canvas></div>
-      </section>
-    </div>
-
-    <section class="card">
-      <h2 id="detailTitle">Detalle por distrito</h2>
-      <p class="help">Clic en una fila para ver su gráfico. Filtra por provincia o busca por nombre.</p>
-      <div class="filters">
-        <select id="provFilter"><option value="">Todas las provincias</option></select>
-        <input type="search" id="search" placeholder="Buscar distrito..." />
-      </div>
-      <div style="overflow:auto;">
-        <table>
-          <thead>
-            <tr>
-              <th>Distrito</th>
-              <th>Provincia</th>
-              <th>Casos real</th>
-              <th>Predicho</th>
-              <th>Error %</th>
-              <th>MAE</th>
-              <th>Pronóstico h+1</th>
-              <th>Riesgo</th>
-            </tr>
-          </thead>
-          <tbody id="detail-body"></tbody>
-        </table>
-      </div>
-    </section>
   </main>
 
   <footer id="footer-note"></footer>
@@ -526,358 +505,172 @@
     const RISK_COLOR = { alto: "#e11d48", medio: "#ea8c5d", bajo: "#6fb8a8" };
     const CHART_REAL = "#18323a";
     const CHART_PRED = "#3aa8a0";
-    let districtChart = null;
-    let depChart = null;
-    let selectedUbigeo = null;
-    let dashboardData = null;
-    let activeYear = null;
-    let activeRows = [];
-    let mapReady = false;
-    const MIN_CASES_PCT = 10; // minimum annual cases for interpretable % error
+    const MONTHS = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+    let data = null;
+    let validationChart = null;
+    let mapRef = null;
 
     async function load() {
       try {
         const res = await fetch("./data/dashboard.json", { cache: "no-store" });
-        if (!res.ok) throw new Error("No se pudo cargar data/dashboard.json. Ejecuta primero el pipeline.");
-        dashboardData = await res.json();
-        setupYearSelector(dashboardData);
-        renderStatic(dashboardData);
-        setYear(String(dashboardData.meta.anio_test || "2025"));
+        if (!res.ok) throw new Error("No se pudo cargar data/dashboard.json. Ejecuta 05_annual_elnino_model.py.");
+        data = await res.json();
+        const m = data.meta;
+        document.getElementById("footer-note").textContent =
+          `${m.nota} Fuentes: ${m.fuente_casos}; ${m.fuente_clima}. Modelo: ${m.modelo}.`;
+        document.getElementById("modeForecast").onclick = () => setMode("forecast");
+        document.getElementById("modeValidation").onclick = () => setMode("validation");
+        setMode("forecast");
       } catch (err) {
         document.querySelector("main").innerHTML = `<div class="error">${err.message}</div>`;
       }
     }
 
-    function setupYearSelector(data) {
-      const years = (data.meta.anios_validacion || Object.keys(data.validaciones || {})).map(String);
-      const sel = document.getElementById("yearSelect");
-      sel.innerHTML = "";
-      years.forEach(y => {
-        const opt = document.createElement("option");
-        opt.value = y;
-        opt.textContent = y;
-        sel.appendChild(opt);
-      });
-      sel.onchange = () => setYear(sel.value);
-    }
-
-    function getValidation(year) {
-      if (dashboardData.validaciones && dashboardData.validaciones[year]) {
-        return dashboardData.validaciones[year];
+    function setMode(mode) {
+      const isForecast = mode === "forecast";
+      for (const [id, on] of [["modeForecast", isForecast], ["modeValidation", !isForecast]]) {
+        document.getElementById(id).classList.toggle("active", on);
+        document.getElementById(id).setAttribute("aria-selected", String(on));
       }
-      // Legacy single-year payload
-      return {
-        anio: Number(year),
-        mae_distrito: dashboardData.meta.mae_distrito,
-        rmse_distrito: dashboardData.meta.rmse_distrito,
-        mae_departamento: dashboardData.meta.mae_departamento,
-        rmse_departamento: dashboardData.meta.rmse_departamento,
-        casos_anual_real: null,
-        casos_anual_predicho: null,
-        error_anual_pct: null,
-        departamento: dashboardData.departamento_backtest || dashboardData.departamento_2024,
-        backtest_distritos: dashboardData.backtest_distritos,
-        resumen_distritos: dashboardData.resumen_distritos_backtest || dashboardData.resumen_distritos_2024,
-      };
+      document.getElementById("view-forecast").hidden = !isForecast;
+      document.getElementById("view-validation").hidden = isForecast;
+      if (isForecast) renderForecast();
+      else renderValidation();
     }
 
-    function renderStatic(data) {
+    const chips = list => {
+      document.getElementById("meta-chips").innerHTML = list.map(t => `<span class="chip">${t}</span>`).join("");
+    };
+    const kpis = list => {
+      document.getElementById("kpis").innerHTML = list
+        .map(([k, v, s]) => `<div class="kpi"><span>${k}</span><b>${v}</b><span>${s}</span></div>`).join("");
+    };
+    const fmt = v => Math.round(Number(v)).toLocaleString("es-PE");
+
+    function renderForecast() {
       const m = data.meta;
-      document.getElementById("footer-note").textContent =
-        `${m.nota} Fuentes: ${m.fuente_casos}; ${m.fuente_clima}. Modelo: ${m.modelo}.`;
+      const p26 = data.pronostico_2026;
+      const enfen = data.escenarios_2027.find(s => s.enfen) || data.escenarios_2027.at(-1);
+      const icen = m.icen_ultimo;
+      const v = data.validacion;
 
-      const ranking = data.ranking_accion.slice(0, 15);
-      document.getElementById("ranking-body").innerHTML = ranking.map((r, i) => `
-        <tr class="clickable" data-ubigeo="${r.ubigeo}">
-          <td>${i + 1}</td>
-          <td>${title(r.distrito)}<div style="color:var(--muted);font-size:0.8rem">${title(r.provincia)}</div></td>
-          <td>${r.pred_promedio}</td>
-          <td><span class="badge ${r.riesgo}">${r.riesgo}</span></td>
-        </tr>
-      `).join("");
-      document.getElementById("ranking-body").onclick = (e) => {
-        const tr = e.target.closest("tr[data-ubigeo]");
-        if (tr) selectDistrict(tr.dataset.ubigeo);
-      };
+      chips([
+        `Provincia ${title(m.provincia)}, Lambayeque`,
+        `Último dato de casos: ${m.ultimo_dato_casos}`,
+        `ICEN ${MONTHS[icen.mes - 1]} ${icen.anio}: ${icen.valor.toFixed(2)}`,
+      ]);
+      kpis([
+        ["2026 estimado", fmt(p26.predicho), `ICEN observado ${p26.icen_season} · riesgo ${p26.riesgo}`],
+        ["2027 estimado", fmt(enfen.predicho), `con pronóstico ENFEN · riesgo ${enfen.riesgo}`],
+        ["ICEN más reciente", icen.valor.toFixed(2), `${MONTHS[icen.mes - 1]} ${icen.anio} · El Niño costero en alerta`],
+        [`Error validación ${v.anio}`, `${v.error_pct}%`, `${fmt(v.real)} reales vs ${fmt(v.predicho)} predichos`],
+      ]);
 
-      if (!mapReady) {
-        const map = L.map("map").setView([-6.55, -79.75], 9);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution: "&copy; OpenStreetMap",
-          maxZoom: 14,
-        }).addTo(map);
-        data.mapa_pronostico_h1.forEach(p => {
-          const color = RISK_COLOR[p.riesgo] || "#666";
-          const radius = Math.max(7, Math.min(22, 6 + Math.sqrt(p.predicho) * 1.8));
-          L.circleMarker([p.lat, p.lon], {
-            radius,
-            color: "#fff",
-            weight: 1.5,
-            fillColor: color,
-            fillOpacity: 0.85,
-          }).addTo(map).bindPopup(
-            `<strong>${title(p.distrito)}</strong><br/>Provincia: ${title(p.provincia)}<br/>` +
-            `Predicción ${p.anio}-${String(p.mes).padStart(2,"0")}: <b>${p.predicho}</b> casos<br/>` +
-            `Riesgo: <b>${p.riesgo}</b>`
-          ).on("click", () => selectDistrict(p.ubigeo));
-        });
-        mapReady = true;
-      }
-    }
-
-    function setYear(year) {
-      activeYear = String(year);
-      document.getElementById("yearSelect").value = activeYear;
-      const v = getValidation(activeYear);
-      const m = dashboardData.meta;
-      const h1 = Object.fromEntries(dashboardData.mapa_pronostico_h1.map(r => [r.ubigeo, r]));
-
-      document.getElementById("meta-chips").innerHTML = [
-        `Validación: ${activeYear}`,
-        `Último dato: ${m.ultimo_dato}`,
-        `Pronóstico: 2026–2027`,
-        `${v.n_distritos || m.n_distritos} distritos`,
-        `MAE dep. ${activeYear}: ${v.mae_departamento}`,
-        `Error anual: ${v.error_anual_pct ?? "—"}%`,
-      ].map(t => `<span class="chip">${t}</span>`).join("");
-
-      document.getElementById("kpis").innerHTML = [
-        ["MAE departamento", v.mae_departamento, `casos/mes · ${activeYear}`],
-        ["RMSE departamento", v.rmse_departamento, `validación ${activeYear}`],
-        ["MAE por distrito", v.mae_distrito, "promedio mensual"],
-        ["Error anual", `${v.error_anual_pct ?? "—"}%`, `${v.casos_anual_real ?? "—"} vs ${v.casos_anual_predicho ?? "—"}`],
-      ].map(([k,val,s]) => `<div class="kpi"><span>${k}</span><b>${val}</b><span>${s}</span></div>`).join("");
-
-      document.getElementById("depChartTitle").textContent = `Departamento ${activeYear}`;
-      document.getElementById("detailTitle").textContent = `Detalle por distrito · ${activeYear}`;
-      document.getElementById("districtHelp").textContent =
-        `Backtest ${activeYear} (línea continua) y pronóstico 2026–2027 (línea punteada).`;
-
-      activeRows = (v.resumen_distritos || []).map(r => {
-        const real = Number(r.casos_real) || 0;
-        const pred = Number(r.casos_pred) || 0;
-        const errorPct = real > 0
-          ? Math.abs(real - pred) / real * 100
-          : (pred > 0 ? 100 : 0);
-        return {
-          ...r,
-          error_anual_pct: Math.round(errorPct * 10) / 10,
-          h1: h1[r.ubigeo]?.predicho ?? "—",
-          riesgo: h1[r.ubigeo]?.riesgo ?? "bajo",
-        };
-      });
-      renderBestDistricts(activeRows);
-
-      if (depChart) depChart.destroy();
-      const dep = v.departamento || [];
-      depChart = new Chart(document.getElementById("depChart"), {
-        type: "line",
-        data: {
-          labels: dep.map(d => d.mes),
-          datasets: [
-            { label: `Real ${activeYear}`, data: dep.map(d => d.real), borderColor: CHART_REAL, backgroundColor: "rgba(24,50,58,0.08)", tension: 0.25, pointRadius: 4, pointBackgroundColor: CHART_REAL },
-            { label: "Predicho", data: dep.map(d => d.predicho), borderColor: CHART_PRED, backgroundColor: "rgba(58,168,160,0.12)", tension: 0.25, pointRadius: 4, pointBackgroundColor: CHART_PRED },
-          ],
-        },
-        options: chartOptions("Mes"),
-      });
-
-      const distSel = document.getElementById("districtSelect");
-      const prev = selectedUbigeo;
-      distSel.innerHTML = "";
-      activeRows.forEach(r => {
-        const opt = document.createElement("option");
-        opt.value = r.ubigeo;
-        opt.textContent = `${title(r.distrito)} (${title(r.provincia)})`;
-        distSel.appendChild(opt);
-      });
-      distSel.onchange = () => selectDistrict(distSel.value);
-
-      const provSel = document.getElementById("provFilter");
-      const keepProv = provSel.value;
-      provSel.innerHTML = `<option value="">Todas las provincias</option>`;
-      [...new Set(activeRows.map(r => r.provincia))].sort().forEach(p => {
-        const opt = document.createElement("option");
-        opt.value = p; opt.textContent = title(p);
-        provSel.appendChild(opt);
-      });
-      if ([...provSel.options].some(o => o.value === keepProv)) provSel.value = keepProv;
-
-      const tbody = document.getElementById("detail-body");
-      tbody.onclick = (e) => {
-        const tr = e.target.closest("tr[data-ubigeo]");
-        if (tr) {
-          selectDistrict(tr.dataset.ubigeo);
-          paintDetail();
-        }
-      };
-      document.getElementById("provFilter").onchange = paintDetail;
-      document.getElementById("search").oninput = paintDetail;
-      paintDetail();
-
-      const pick = activeRows.some(r => r.ubigeo === prev) ? prev : activeRows[0]?.ubigeo;
-      selectDistrict(pick);
-    }
-
-    function pctClass(p) {
-      if (p <= 10) return "pct-good";
-      if (p <= 40) return "pct-mid";
-      return "pct-bad";
-    }
-
-    function renderBestDistricts(rows) {
-      const ranked = rows
-        .filter(r => Number(r.casos_real) >= MIN_CASES_PCT)
-        .slice()
-        .sort((a, b) => a.error_anual_pct - b.error_anual_pct);
-      const hero = document.getElementById("best-hero");
-      const body = document.getElementById("best-body");
-
-      if (!ranked.length) {
-        hero.innerHTML = `
-          <div>
-            <p class="label">Menor error · ${activeYear}</p>
-            <p class="district-name">Sin datos suficientes</p>
-          </div>
-          <div>
-            <p class="pct">—</p>
-            <p class="detail">Ningún distrito alcanzó ${MIN_CASES_PCT} casos anuales en ${activeYear}.</p>
-          </div>
-        `;
-        body.innerHTML = "";
-        return;
-      }
-
-      const best = ranked[0];
-      hero.innerHTML = `
+      document.getElementById("forecast-hero").innerHTML = `
         <div>
-          <p class="label">Menor error · ${activeYear}</p>
-          <p class="district-name">${title(best.distrito)}</p>
+          <p class="label">El Niño extraordinario (ENFEN)</p>
+          <p class="district-name">Pronóstico 2027</p>
         </div>
         <div>
-          <p class="pct">${best.error_anual_pct.toFixed(1)}%</p>
+          <p class="pct">${fmt(enfen.predicho)}<span class="unit">casos</span></p>
           <p class="detail">
-            ${title(best.provincia)} · ${best.casos_real} reales vs ${best.casos_pred} predichos · MAE ${best.mae}
+            si El Niño se mantiene extraordinario (ICEN ≥ ${enfen.icen_season}).
+            2026: ${fmt(p26.predicho)} casos · 2025 real: ${fmt(data.casos_anuales.at(-1).casos)}
           </p>
         </div>
       `;
-      hero.onclick = () => selectDistrict(best.ubigeo);
-      hero.style.cursor = "pointer";
 
-      body.innerHTML = ranked.slice(0, 8).map((r, i) => `
-        <tr class="clickable" data-ubigeo="${r.ubigeo}">
-          <td>${i + 1}</td>
-          <td>${title(r.distrito)}<div style="color:var(--muted);font-size:0.8rem">${title(r.provincia)}</div></td>
-          <td>${r.casos_real}</td>
-          <td>${r.casos_pred}</td>
-          <td class="${pctClass(r.error_anual_pct)}">${r.error_anual_pct.toFixed(1)}%</td>
-        </tr>
-      `).join("");
-      body.onclick = (e) => {
-        const tr = e.target.closest("tr[data-ubigeo]");
-        if (tr) selectDistrict(tr.dataset.ubigeo);
-      };
-    }
-
-    function paintDetail() {
-      const q = document.getElementById("search").value.trim().toLowerCase();
-      const prov = document.getElementById("provFilter").value;
-      const filtered = activeRows.filter(r =>
-        (!prov || r.provincia === prov) &&
-        (!q || r.distrito.toLowerCase().includes(q))
-      );
-      document.getElementById("detail-body").innerHTML = filtered.map(r => `
-        <tr class="clickable ${r.ubigeo === selectedUbigeo ? "selected" : ""}" data-ubigeo="${r.ubigeo}">
-          <td>${title(r.distrito)}</td>
-          <td>${title(r.provincia)}</td>
-          <td>${r.casos_real}</td>
-          <td>${r.casos_pred}</td>
-          <td class="${pctClass(r.error_anual_pct)}">${Number(r.error_anual_pct).toFixed(1)}%</td>
-          <td>${r.mae}</td>
-          <td>${r.h1}</td>
+      const rows = [
+        { ...p26, etiqueta: "Observado (IGP)" },
+        { ...enfen, etiqueta: "Pronóstico ENFEN" },
+      ];
+      document.getElementById("scenario-body").innerHTML = rows.map(r => `
+        <tr class="${r.enfen ? "highlight" : ""}">
+          <td>${r.anio}</td>
+          <td>${r.etiqueta}</td>
+          <td>${Number(r.icen_season).toFixed(2)}</td>
+          <td>${fmt(r.predicho)}</td>
           <td><span class="badge ${r.riesgo}">${r.riesgo}</span></td>
         </tr>
       `).join("");
+
+      renderMap(m, enfen);
+      if (mapRef) setTimeout(() => mapRef.invalidateSize(), 50);
     }
 
-    function selectDistrict(ubigeo) {
-      if (!ubigeo || !dashboardData) return;
-      selectedUbigeo = ubigeo;
-      const distSel = document.getElementById("districtSelect");
-      if (distSel.value !== ubigeo) distSel.value = ubigeo;
+    function renderValidation() {
+      const m = data.meta;
+      const v = data.validacion;
+      const diff = v.predicho - v.real;
 
-      const v = getValidation(activeYear);
-      const backtest = (v.backtest_distritos || [])
-        .filter(r => r.ubigeo === ubigeo)
-        .sort((a, b) => a.mes - b.mes);
-      // Show only first 12 forecast months on the district chart to keep it readable
-      const forecast = (dashboardData.pronostico || [])
-        .filter(r => r.ubigeo === ubigeo)
-        .sort((a, b) => a.horizonte - b.horizonte)
-        .slice(0, 12);
+      chips([
+        `Entrenado ${m.anio_inicio_entrenamiento}–${v.anio - 1}`,
+        `${m.n_distritos_entrenamiento} distritos de la costa`,
+        `Error ${v.anio}: ${v.error_pct}%`,
+      ]);
+      kpis([
+        [`Error ${v.anio}`, `${v.error_pct}%`, "pronóstico anual sin ver el año"],
+        [`Casos reales ${v.anio}`, fmt(v.real), "CDC/MINSA"],
+        [`Casos predichos ${v.anio}`, fmt(v.predicho), `ICEN máx. ene–may ${v.icen_season}`],
+        ["Diferencia", `${diff > 0 ? "+" : ""}${fmt(diff)}`, diff > 0 ? "casos de más" : "casos de menos"],
+      ]);
 
-      const labels = [
-        ...backtest.map(r => `${activeYear}-${String(r.mes).padStart(2,"0")}`),
-        ...forecast.map(r => `${r.anio}-${String(r.mes).padStart(2,"0")}`),
-      ];
-      const observed = [
-        ...backtest.map(r => r.casos),
-        ...forecast.map(() => null),
-      ];
-      const predicted = [
-        ...backtest.map(r => r.predicho),
-        ...forecast.map(r => r.predicho),
-      ];
+      document.getElementById("validation-hero").innerHTML = `
+        <div>
+          <p class="label">Modelo entrenado ${m.anio_inicio_entrenamiento}–${v.anio - 1}</p>
+          <p class="district-name">Validación ${v.anio}</p>
+        </div>
+        <div>
+          <p class="pct">${v.error_pct}%<span class="unit">de error</span></p>
+          <p class="detail">
+            ${fmt(v.real)} casos reales vs ${fmt(v.predicho)} predichos, sin que el modelo viera ${v.anio}
+          </p>
+        </div>
+      `;
 
-      const meta = activeRows.find(r => r.ubigeo === ubigeo);
-      if (districtChart) districtChart.destroy();
-      districtChart = new Chart(document.getElementById("districtChart"), {
-        type: "line",
+      document.getElementById("validation-title").textContent = `Detalle de la validación ${v.anio}`;
+      document.getElementById("validation-chart-title").textContent = `Real vs predicho ${v.anio}`;
+      document.getElementById("validation-body").innerHTML = [
+        ["Periodo de entrenamiento", `${m.anio_inicio_entrenamiento}–${v.anio - 1}`],
+        ["Año validado", v.anio],
+        ["ICEN máx. ene–may", Number(v.icen_season).toFixed(2)],
+        ["Casos reales", fmt(v.real)],
+        ["Casos predichos", fmt(v.predicho)],
+        ["Error", `${v.error_pct}%`],
+      ].map(([k, val]) => `<tr><th>${k}</th><td>${val}</td></tr>`).join("");
+
+      if (validationChart) validationChart.destroy();
+      validationChart = new Chart(document.getElementById("validationChart"), {
+        type: "bar",
         data: {
-          labels,
-          datasets: [
-            {
-              label: `Real ${activeYear}`,
-              data: observed,
-              borderColor: CHART_REAL,
-              backgroundColor: "rgba(24,50,58,0.08)",
-              tension: 0.25,
-              pointRadius: 3,
-              pointBackgroundColor: CHART_REAL,
-              spanGaps: false,
-            },
-            {
-              label: "Predicho + pronóstico",
-              data: predicted,
-              borderColor: CHART_PRED,
-              backgroundColor: "rgba(58,168,160,0.12)",
-              tension: 0.25,
-              pointRadius: 3,
-              pointBackgroundColor: CHART_PRED,
-              segment: {
-                borderDash: (ctx) =>
-                  ctx.p0DataIndex >= backtest.length - 1 ? [6, 4] : undefined,
-              },
-            },
-          ],
+          labels: [`Real ${v.anio}`, `Predicho ${v.anio}`],
+          datasets: [{
+            label: "Casos",
+            data: [v.real, v.predicho],
+            backgroundColor: ["rgba(24,50,58,0.75)", "rgba(58,168,160,0.75)"],
+            borderRadius: 8,
+            maxBarThickness: 140,
+          }],
         },
-        options: {
-          ...chartOptions("Periodo"),
-          plugins: {
-            legend: { position: "bottom" },
-            title: {
-              display: !!meta,
-              text: meta
-                ? `${title(meta.distrito)} · ${activeYear} · MAE ${meta.mae} · riesgo ${meta.riesgo}`
-                : "",
-              color: "#5a6760",
-              font: { size: 12, weight: "500" },
-            },
-          },
-        },
+        options: { ...chartOptions(""), plugins: { legend: { display: false } } },
       });
+    }
 
-      paintDetail();
+    function renderMap(m, scenario) {
+      if (!mapRef) {
+        mapRef = L.map("map").setView([m.lat, m.lon], 12);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "&copy; OpenStreetMap",
+          maxZoom: 15,
+        }).addTo(mapRef);
+      }
+      mapRef.eachLayer(layer => { if (layer instanceof L.CircleMarker) mapRef.removeLayer(layer); });
+      L.circleMarker([m.lat, m.lon], {
+        radius: 18, color: "#fff", weight: 2,
+        fillColor: RISK_COLOR[scenario.riesgo] || "#666", fillOpacity: 0.9,
+      }).addTo(mapRef).bindPopup(
+        `<strong>${title(m.foco)}</strong><br/>2027 (${scenario.etiqueta}): <b>${fmt(scenario.predicho)}</b> casos<br/>Riesgo: <b>${scenario.riesgo}</b>`
+      );
     }
 
     function chartOptions(xTitle) {
@@ -893,7 +686,6 @@
     }
 
     function title(s) {
-      // Avoid /\b\w/: in JS, ñ/á are not word chars, so "Ferreñafe" became "FerreñAfe".
       return String(s || "")
         .toLocaleLowerCase("es-PE")
         .replace(/(^|[\s\-'])(\S)/g, (_, sep, ch) => sep + ch.toLocaleUpperCase("es-PE"));
